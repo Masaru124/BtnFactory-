@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const User = require('./models/User');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
@@ -20,14 +21,7 @@ mongoose.connect('mongodb://localhost:27017/ecommerce-app')
     console.error('MongoDB connection error:', err);
   });
 
-// User schema and model
-const userSchema = new mongoose.Schema({
-  username: { type: String, unique: true },
-  password: String, // In production, hash passwords
-  role: { type: String, enum: ['admin', 'staff', 'user'], default: 'user' },
-});
 
-const User = mongoose.model('User', userSchema);
 
 // Middleware to verify JWT token and set req.user
 const authenticateToken = (req, res, next) => {
@@ -42,7 +36,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Login route
+ // Login route
 app.post('/api/login', async (req, res) => {
   console.log('Login request body:', req.body);
   const { username, password } = req.body;
@@ -52,17 +46,17 @@ app.post('/api/login', async (req, res) => {
   // For demo, plain text password check (not secure)
   if (user.password !== password) return res.status(400).json({ message: 'Invalid username or password' });
 
-  const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET);
-  res.json({ token, role: user.role });
+  const token = jwt.sign({ username: user.username, roles: user.roles }, JWT_SECRET);
+  res.json({ token, roles: user.roles });
 });
 
 // Admin route to add user and change roles
 app.post('/api/admin/users', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
-  const { username, password, role } = req.body;
+  const { username, password, roles } = req.body;
   try {
-    const newUser = new User({ username, password, role });
+    const newUser = new User({ username, password, roles });
     await newUser.save();
     res.status(201).json({ message: 'User created' });
   } catch (err) {
@@ -72,10 +66,10 @@ app.post('/api/admin/users', authenticateToken, async (req, res) => {
 
 // Admin route to get all users
 app.get('/api/admin/users', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
   try {
-    const users = await User.find({}, 'username role');
+    const users = await User.find({}, 'username roles');
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching users', error: err.message });
@@ -84,24 +78,25 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
 
 // Admin route to update user role
 app.put('/api/admin/users/:username/role', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
   const { username } = req.params;
-  const { role } = req.body;
+  const { roles } = req.body;
 
-  if (!['admin', 'staff', 'user'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role' });
+  const validRoles = ['admin', 'staff', 'user'];
+  if (!Array.isArray(roles) || roles.some(role => !validRoles.includes(role))) {
+    return res.status(400).json({ message: 'Invalid roles' });
   }
 
   try {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.role = role;
+    user.roles = roles;
     await user.save();
-    res.json({ message: 'User role updated' });
+    res.json({ message: 'User roles updated' });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating user role', error: err.message });
+    res.status(500).json({ message: 'Error updating user roles', error: err.message });
   }
 });
 
@@ -174,7 +169,7 @@ app.post('/api/staff/delivery', authenticateToken, async (req, res) => {
 const createDefaultAdmin = async () => {
   const adminUser = await User.findOne({ username: 'admin' });
   if (!adminUser) {
-    const defaultAdmin = new User({ username: 'admin', password: 'admin123', role: 'admin' });
+    const defaultAdmin = new User({ username: 'admin', password: 'admin123', roles: ['admin'] });
     await defaultAdmin.save();
     console.log('Default admin user created: username=admin, password=admin123');
   }
@@ -195,7 +190,7 @@ app.post('/api/register', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: 'Username already exists' });
     }
-    const newUser = new User({ username, password, role: 'user' });
+    const newUser = new User({ username, password, roles: ['user'] });
     await newUser.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {

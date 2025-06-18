@@ -9,11 +9,23 @@ router.use(authenticateToken);
 
 // Admin route to add user
 router.post('/users', async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
-  const { username, password, role } = req.body;
+  const { username, password, roles, departments } = req.body;
+
+  // Validate roles and departments
+  const validRoles = ['admin', 'staff', 'user'];
+  const validDepartments = ['Production', 'Quality', 'Packing', 'Accounting', 'Inventory'];
+
+  if (!Array.isArray(roles) || !roles.every(r => validRoles.includes(r))) {
+    return res.status(400).json({ message: 'Invalid roles' });
+  }
+  if (!Array.isArray(departments) || !departments.every(d => validDepartments.includes(d))) {
+    return res.status(400).json({ message: 'Invalid departments' });
+  }
+
   try {
-    const newUser = new User({ username, password, role });
+    const newUser = new User({ username, password, roles, departments });
     await newUser.save();
     res.status(201).json({ message: 'User created' });
   } catch (err) {
@@ -23,42 +35,49 @@ router.post('/users', async (req, res) => {
 
 // Admin route to get all users
 router.get('/users', async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
   try {
-    const users = await User.find({}, 'username role');
+    const users = await User.find({}, 'username roles departments');
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching users', error: err.message });
   }
 });
 
-// Admin route to update user role
+// Admin route to update user roles and departments
 router.put('/users/:username/role', async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
   const { username } = req.params;
-  const { role } = req.body;
+  const { roles, departments } = req.body;
 
-  if (!['admin', 'staff', 'user'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role' });
+  const validRoles = ['admin', 'staff', 'user'];
+  const validDepartments = ['Production', 'Quality', 'Packing', 'Accounting', 'Inventory'];
+
+  if (!Array.isArray(roles) || !roles.every(r => validRoles.includes(r))) {
+    return res.status(400).json({ message: 'Invalid roles' });
+  }
+  if (!Array.isArray(departments) || !departments.every(d => validDepartments.includes(d))) {
+    return res.status(400).json({ message: 'Invalid departments' });
   }
 
   try {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.role = role;
+    user.roles = roles;
+    user.departments = departments;
     await user.save();
-    res.json({ message: 'User role updated' });
+    res.json({ message: 'User roles and departments updated' });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating user role', error: err.message });
+    res.status(500).json({ message: 'Error updating user roles', error: err.message });
   }
 });
 
 // Admin route to add product
 router.post('/products', async (req, res) => {
-  if (req.user.role !== 'admin') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('admin')) return res.sendStatus(403);
 
   const { name, description, price, stock } = req.body;
   try {

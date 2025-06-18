@@ -3,9 +3,9 @@ import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../contexts/AuthContext';
 
-const RegisterScreen: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+const RegisterScreen = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigation = useNavigation();
   const authContext = useContext(AuthContext);
 

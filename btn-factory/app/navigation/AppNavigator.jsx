@@ -9,7 +9,7 @@ import { AuthContext } from '../contexts/AuthContext';
 
 const Stack = createStackNavigator();
 
-const AppNavigator: React.FC = () => {
+const AppNavigator = () => {
   const authContext = useContext(AuthContext);
 
   if (!authContext) {
@@ -22,7 +22,7 @@ const AppNavigator: React.FC = () => {
     );
   }
 
-  const { userRole, userToken } = authContext;
+  const { userRoles, userToken } = authContext;
 
   return (
     <Stack.Navigator>
@@ -31,9 +31,9 @@ const AppNavigator: React.FC = () => {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
         </>
-      ) : userRole === 'admin' ? (
+      ) : userRoles && userRoles.includes('admin') ? (
         <Stack.Screen name="Admin" component={AdminScreen} />
-      ) : userRole === 'staff' ? (
+      ) : userRoles && userRoles.includes('staff') ? (
         <Stack.Screen name="Staff" component={StaffScreen} />
       ) : (
         <Stack.Screen name="User" component={UserScreen} />

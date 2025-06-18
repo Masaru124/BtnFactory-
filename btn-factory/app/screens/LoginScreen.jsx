@@ -1,20 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../contexts/AuthContext';
 
-type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Admin: undefined;
-  Staff: undefined;
-  User: undefined;
-};
-
-const LoginScreen: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+const LoginScreen = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigation = useNavigation();
   const authContext = useContext(AuthContext);
 
   if (!authContext) {
@@ -26,12 +18,8 @@ const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     try {
       await signIn({ username, password });
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        Alert.alert('Login failed', e.message);
-      } else {
-        Alert.alert('Login failed', 'Unknown error');
-      }
+    } catch (e) {
+      Alert.alert('Login failed', e.message || 'Unknown error');
     }
   };
 

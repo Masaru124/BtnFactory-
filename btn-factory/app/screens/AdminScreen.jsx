@@ -1,10 +1,10 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, TextInput, Alert, ScrollView, FlatList } from 'react-native';
+import { View, Text, Button, StyleSheet, TextInput, Alert, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../contexts/AuthContext';
 
-const AdminScreen: React.FC = () => {
+const AdminScreen = () => {
   const authContext = useContext(AuthContext);
 
   if (!authContext) {
@@ -16,7 +16,8 @@ const AdminScreen: React.FC = () => {
   // State for user form
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user');
+  const [roles, setRoles] = useState(['user']);
+  const [departments, setDepartments] = useState([]);
 
   // State for product form
   const [productName, setProductName] = useState('');
@@ -25,9 +26,10 @@ const AdminScreen: React.FC = () => {
   const [productStock, setProductStock] = useState('');
 
   // State for existing users
-  const [users, setUsers] = useState<{ username: string; role: string }[]>([]);
-  const [selectedUser, setSelectedUser] = useState<string | undefined>(undefined);
-  const [newRole, setNewRole] = useState('user');
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(undefined);
+  const [newRoles, setNewRoles] = useState(['user']);
+  const [newDepartments, setNewDepartments] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -52,37 +54,38 @@ const AdminScreen: React.FC = () => {
     }
   };
 
-  const handleUpdateUserRole = async () => {
-    if (!selectedUser || !newRole) {
-      Alert.alert('Error', 'Please select a user and a role');
+  const handleUpdateUserRoles = async () => {
+    if (!selectedUser || !newRoles.length) {
+      Alert.alert('Error', 'Please select a user and at least one role');
       return;
     }
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch(`http://localhost:5000/api/admin/users/${selectedUser}/role`, {
+      const response = await fetch(`http://localhost:5000/api/admin/users/${selectedUser}/roles`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ roles: newRoles, departments: newDepartments }),
       });
       if (response.ok) {
-        Alert.alert('Success', 'User role updated');
+        Alert.alert('Success', 'User roles updated');
         setSelectedUser(undefined);
-        setNewRole('user');
+        setNewRoles(['user']);
+        setNewDepartments([]);
         fetchUsers();
       } else {
         const data = await response.json();
-        Alert.alert('Error', data.message || 'Failed to update user role');
+        Alert.alert('Error', data.message || 'Failed to update user roles');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to update user role');
+      Alert.alert('Error', 'Failed to update user roles');
     }
   };
 
   const handleAddUser = async () => {
-    if (!username || !password || !role) {
+    if (!username || !password || !roles.length) {
       Alert.alert('Error', 'Please fill all user fields');
       return;
     }
@@ -94,13 +97,14 @@ const AdminScreen: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ username, password, role }),
+        body: JSON.stringify({ username, password, roles, departments }),
       });
       if (response.ok) {
         Alert.alert('Success', 'User added successfully');
         setUsername('');
         setPassword('');
-        setRole('user');
+        setRoles(['user']);
+        setDepartments([]);
         fetchUsers();
       } else {
         const data = await response.json();
@@ -165,30 +169,64 @@ const AdminScreen: React.FC = () => {
         style={styles.input}
         secureTextEntry
       />
-      <Picker selectedValue={role} onValueChange={(itemValue: string) => setRole(itemValue)} style={styles.picker}>
+      <Text style={styles.label}>Select Roles</Text>
+      <Picker
+        selectedValue={roles[0]}
+        onValueChange={(itemValue) => setRoles([itemValue])}
+        style={styles.picker}
+      >
         <Picker.Item label="User" value="user" />
         <Picker.Item label="Staff" value="staff" />
         <Picker.Item label="Admin" value="admin" />
+      </Picker>
+      <Text style={styles.label}>Select Departments</Text>
+      <Picker
+        selectedValue={departments[0]}
+        onValueChange={(itemValue) => setDepartments([itemValue])}
+        style={styles.picker}
+      >
+        <Picker.Item label="Production" value="Production" />
+        <Picker.Item label="Quality" value="Quality" />
+        <Picker.Item label="Packing" value="Packing" />
+        <Picker.Item label="Accounting" value="Accounting" />
+        <Picker.Item label="Inventory" value="Inventory" />
       </Picker>
       <Button title="Add User" onPress={handleAddUser} />
 
       <Text style={styles.sectionTitle}>Manage Users</Text>
       <Picker
         selectedValue={selectedUser}
-        onValueChange={(itemValue: string) => setSelectedUser(itemValue)}
+        onValueChange={(itemValue) => setSelectedUser(itemValue)}
         style={styles.picker}
       >
         <Picker.Item label="Select User" value={undefined} />
         {users.map((user) => (
-          <Picker.Item key={user.username} label={`${user.username} (${user.role})`} value={user.username} />
+          <Picker.Item key={user.username} label={`${user.username} (${user.roles ? user.roles.join(', ') : user.role})`} value={user.username} />
         ))}
       </Picker>
-      <Picker selectedValue={newRole} onValueChange={(itemValue: string) => setNewRole(itemValue)} style={styles.picker}>
+      <Text style={styles.label}>Update Roles</Text>
+      <Picker
+        selectedValue={newRoles[0]}
+        onValueChange={(itemValue) => setNewRoles([itemValue])}
+        style={styles.picker}
+      >
         <Picker.Item label="User" value="user" />
         <Picker.Item label="Staff" value="staff" />
         <Picker.Item label="Admin" value="admin" />
       </Picker>
-      <Button title="Update Role" onPress={handleUpdateUserRole} />
+      <Text style={styles.label}>Update Departments</Text>
+      <Picker
+        selectedValue={newDepartments[0]}
+        onValueChange={(itemValue) => setNewDepartments([itemValue])}
+        style={styles.picker}
+      >
+        <Picker.Item label="Production" value="Production" />
+        <Picker.Item label="Quality" value="Quality" />
+        <Picker.Item label="Packing" value="Packing" />
+        <Picker.Item label="Accounting" value="Accounting" />
+        <Picker.Item label="Inventory" value="Inventory" />
+      </Picker>
+      <Button title="Update Roles" onPress={handleUpdateUserRoles} />
 
       <Text style={styles.sectionTitle}>Add Product</Text>
       <TextInput
@@ -240,6 +278,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: 20,
     marginBottom: 10,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
   },
   input: {
     height: 40,
