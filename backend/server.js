@@ -182,6 +182,8 @@ mongoose.connection.once('open', () => {
   });
 });
 
+const userRoutes = require('./routes/user');
+
 // Registration route for new users
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
@@ -197,3 +199,6 @@ app.post('/api/register', async (req, res) => {
     res.status(400).json({ message: 'Error registering user', error: err.message });
   }
 });
+
+// Use user routes
+app.use('/api/user', authenticateToken, userRoutes);

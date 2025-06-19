@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, TextInput, Alert, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../contexts/AuthContext';
@@ -31,8 +31,18 @@ const AdminScreen = () => {
   const [newRoles, setNewRoles] = useState(['user']);
   const [newDepartments, setNewDepartments] = useState([]);
 
+  // New states for orders, challans, customer history, promotion schemes
+  const [orders, setOrders] = useState([]);
+  const [challans, setChallans] = useState([]);
+  const [customerHistory, setCustomerHistory] = useState([]);
+  const [promotionSchemes, setPromotionSchemes] = useState([]);
+
   useEffect(() => {
     fetchUsers();
+    fetchOrders();
+    fetchChallans();
+    fetchCustomerHistory();
+    fetchPromotionSchemes();
   }, []);
 
   const fetchUsers = async () => {
@@ -51,6 +61,82 @@ const AdminScreen = () => {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch users');
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch('http://localhost:5000/api/user/orders', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data);
+      } else {
+        Alert.alert('Error', 'Failed to fetch orders');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch orders');
+    }
+  };
+
+  const fetchChallans = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch('http://localhost:5000/api/user/challans', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setChallans(data);
+      } else {
+        Alert.alert('Error', 'Failed to fetch challans');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch challans');
+    }
+  };
+
+  const fetchCustomerHistory = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch('http://localhost:5000/api/user/customer-history', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCustomerHistory(data);
+      } else {
+        Alert.alert('Error', 'Failed to fetch customer history');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch customer history');
+    }
+  };
+
+  const fetchPromotionSchemes = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch('http://localhost:5000/api/user/promotion-schemes', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPromotionSchemes(data);
+      } else {
+        Alert.alert('Error', 'Failed to fetch promotion schemes');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch promotion schemes');
     }
   };
 
@@ -149,6 +235,96 @@ const AdminScreen = () => {
       Alert.alert('Error', 'Failed to add product');
     }
   };
+
+  // Render functions for new data lists
+  const handleApproveOrder = async (orderId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch(`http://localhost:5000/api/user/orders/${orderId}/approve`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        Alert.alert('Success', 'Order approved');
+        fetchOrders();
+      } else {
+        Alert.alert('Error', 'Failed to approve order');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to approve order');
+    }
+  };
+
+  const renderOrderItem = ({ item }) => (
+    <View style={styles.listItem}>
+      <Text>Token: {item.token}</Text>
+      <Text>Button: {item.button}</Text>
+      <Text>Order Qty: {item.orderQty}</Text>
+      <Text>Challan Qty: {item.challanQty}</Text>
+      <Text>Laser: {item.laser}</Text>
+      <Text>Created Date: {new Date(item.createdDate).toLocaleString()}</Text>
+      <Button title="Approve Order" onPress={() => handleApproveOrder(item._id)} />
+    </View>
+  );
+
+  const handleApproveChallan = async (challanId) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await fetch(`http://localhost:5000/api/user/challans/${challanId}/approve`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        Alert.alert('Success', 'Challan approved');
+        fetchChallans();
+      } else {
+        Alert.alert('Error', 'Failed to approve challan');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to approve challan');
+    }
+  };
+
+  const renderChallanItem = ({ item }) => (
+    <View style={styles.listItem}>
+      <Text>Challan Number: {item.challanNumber}</Text>
+      <Text>Order Token: {item.orderToken}</Text>
+      <Text>Quantity: {item.quantity}</Text>
+      <Text>Status: {item.status}</Text>
+      <Text>Created Date: {new Date(item.createdDate).toLocaleString()}</Text>
+      <Button title="Approve Challan" onPress={() => handleApproveChallan(item._id)} />
+    </View>
+  );
+
+  const renderCustomerHistoryItem = ({ item }) => (
+    <View style={styles.listItem}>
+      <Text>Customer Name: {item.customerName}</Text>
+      <Text>Token: {item.token}</Text>
+      <Text>Button: {item.button}</Text>
+      <Text>Order Qty: {item.orderQty}</Text>
+      <Text>Challan Qty: {item.challanQty}</Text>
+      <Text>Laser: {item.laser}</Text>
+      <Text>Created Date: {new Date(item.createdDate).toLocaleString()}</Text>
+      <Text>Action: {item.action}</Text>
+    </View>
+  );
+
+  const renderPromotionSchemeItem = ({ item }) => (
+    <View style={styles.listItem}>
+      <Text>Total QR: {item.totalQR}</Text>
+      <Text>Used QR: {item.usedQR}</Text>
+      <Text>Unused QR: {item.unusedQR}</Text>
+      <Text>Creation Date: {new Date(item.creationDate).toLocaleString()}</Text>
+      <Text>Total Approved: {item.totalApproved}</Text>
+      <Text>Total Unapproved: {item.totalUnapproved}</Text>
+      <Text>Positive Response: {item.positiveResponse}</Text>
+      <Text>Negative Response: {item.negativeResponse}</Text>
+    </View>
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -257,6 +433,34 @@ const AdminScreen = () => {
       />
       <Button title="Add Product" onPress={handleAddProduct} />
 
+      <Text style={styles.sectionTitle}>Orders</Text>
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item._id}
+        renderItem={renderOrderItem}
+      />
+
+      <Text style={styles.sectionTitle}>Challans</Text>
+      <FlatList
+        data={challans}
+        keyExtractor={(item) => item._id}
+        renderItem={renderChallanItem}
+      />
+
+      <Text style={styles.sectionTitle}>Customer History</Text>
+      <FlatList
+        data={customerHistory}
+        keyExtractor={(item) => item._id}
+        renderItem={renderCustomerHistoryItem}
+      />
+
+      <Text style={styles.sectionTitle}>Promotion Schemes</Text>
+      <FlatList
+        data={promotionSchemes}
+        keyExtractor={(item) => item._id}
+        renderItem={renderPromotionSchemeItem}
+      />
+
       <View style={{ marginTop: 20 }}>
         <Button title="Logout" onPress={signOut} />
       </View>
@@ -293,6 +497,12 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     marginBottom: 12,
+  },
+  listItem: {
+    backgroundColor: '#f8f9fa',
+    padding: 10,
+    marginBottom: 8,
+    borderRadius: 4,
   },
 });
 
