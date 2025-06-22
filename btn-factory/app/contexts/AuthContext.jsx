@@ -1,64 +1,95 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../../constants/api';
 
 export const AuthContext = createContext(undefined);
 
 const AuthProvider = ({ children }) => {
   const [userToken, setUserToken] = useState(null);
-  const [userRoles, setUserRoles] = useState(null);
-  const [userDepartments, setUserDepartments] = useState(null);
+  const [userRoles, setUserRoles] = useState([]);
+  const [userDepartments, setUserDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Restore session on app launch
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
-        const rolesString = await AsyncStorage.getItem('userRoles');
-        const departmentsString = await AsyncStorage.getItem('userDepartments');
+        const roles = await AsyncStorage.getItem('userRoles');
+        const departments = await AsyncStorage.getItem('userDepartments');
+
         setUserToken(token);
-        setUserRoles(rolesString ? JSON.parse(rolesString) : null);
-        setUserDepartments(departmentsString ? JSON.parse(departmentsString) : null);
+        setUserRoles(roles ? JSON.parse(roles) : []);
+        setUserDepartments(departments ? JSON.parse(departments) : []);
       } catch (e) {
-        // Restoring token failed
+        console.error('❌ Failed to restore user session:', e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
+
     bootstrapAsync();
   }, []);
 
+  // Sign in
   const signIn = async ({ username, password }) => {
-    const response = await fetch('http://localhost:5000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await response.json();
-    // Log the processed roles array instead of raw data.roles
-    const rolesArray = data.roles || (data.role ? [data.role] : []);
-    console.log('Processed login roles array:', rolesArray);
-    if (response.ok) {
+    try {
+      const response = await fetch(`${API_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.token) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      const rolesArray = data.roles || (data.role ? [data.role] : []);
+      const departmentsArray = data.departments || [];
+
+      // Save to AsyncStorage
       await AsyncStorage.setItem('userToken', data.token);
       await AsyncStorage.setItem('userRoles', JSON.stringify(rolesArray));
-      await AsyncStorage.setItem('userDepartments', JSON.stringify(data.departments));
+      await AsyncStorage.setItem('userDepartments', JSON.stringify(departmentsArray));
+
+      // Set local state
       setUserToken(data.token);
       setUserRoles(rolesArray);
-      setUserDepartments(data.departments);
-    } else {
-      throw new Error(data.message || 'Login failed');
+      setUserDepartments(departmentsArray);
+
+      return rolesArray; // 👈 So you can route after login
+    } catch (err) {
+      console.error('❌ Login error:', err.message);
+      throw err;
     }
   };
 
+  // Sign out
   const signOut = async () => {
-    await AsyncStorage.removeItem('userToken');
-    await AsyncStorage.removeItem('userRoles');
-    await AsyncStorage.removeItem('userDepartments');
-    setUserToken(null);
-    setUserRoles(null);
-    setUserDepartments(null);
+    try {
+      await AsyncStorage.multiRemove(['userToken', 'userRoles', 'userDepartments']);
+    } catch (err) {
+      console.error('❌ Error during logout:', err);
+    } finally {
+      setUserToken(null);
+      setUserRoles([]);
+      setUserDepartments([]);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ userToken, userRoles, userDepartments, isLoading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        userToken,
+        userRoles,
+        userDepartments,
+        isLoading,
+        signIn,
+        signOut,
+        isAdmin: userRoles.includes('admin'),
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

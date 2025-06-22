@@ -18,16 +18,30 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useContext(AuthContext);
+  const { signIn, userRoles } = useContext(AuthContext);
   const router = useRouter();
 
   const handleLogin = async () => {
     setError('');
+
+    if (!username || !password) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await signIn({ username, password });
+
+      // ✅ You can check roles and redirect based on it
+      if (userRoles?.includes('admin')) {
+        router.replace('/admin');
+      } else {
+        router.replace('/user');
+      }
     } catch (e) {
+      console.error('Login error:', e);
       setError(e.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);

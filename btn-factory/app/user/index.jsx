@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { API_URL } from "../../constants/api"
 import UserSidebar from '../../components/UserSidebar';
 import UserHeader from '../../components/UserHeader';
 import UserWelcome from '../../components/UserWelcome';
@@ -48,7 +48,7 @@ const UserScreen = () => {
     const fetchAdminOrders = async () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
-        const response = await fetch('http://localhost:5000/api/user/orders', {
+        const response = await fetch(`${API_URL}/api/user/orders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -80,7 +80,7 @@ const UserScreen = () => {
     const fetchUserProfile = async () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
-        const response = await fetch('http://localhost:5000/api/user/profile', {
+        const response = await fetch(`${API_URL}api/user/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -163,7 +163,7 @@ const UserScreen = () => {
   const handleSaveProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/user/profile', {
+      const response = await fetch(`${API_URL}/api/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

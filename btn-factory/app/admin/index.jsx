@@ -3,7 +3,7 @@ import { View, Text, Button, StyleSheet, TextInput, Alert, ScrollView, FlatList,
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../contexts/AuthContext';
-
+import { API_URL } from "../../constants/api"
 const AdminScreen = () => {
   const authContext = useContext(AuthContext);
 
@@ -48,7 +48,7 @@ const AdminScreen = () => {
   const fetchUsers = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/admin/users', {
+      const response = await fetch(`${API_URL}/api/admin/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,7 +67,7 @@ const AdminScreen = () => {
   const fetchOrders = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/user/orders', {
+      const response = await fetch(`${API_URL}/api/user/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,7 +86,7 @@ const AdminScreen = () => {
   const fetchChallans = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/user/challans', {
+      const response = await fetch(`${API_URL}/api/user/challans`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -105,7 +105,7 @@ const AdminScreen = () => {
   const fetchCustomerHistory = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/user/customer-history', {
+      const response = await fetch(`${API_URL}/api/user/customer-history`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -124,7 +124,7 @@ const AdminScreen = () => {
   const fetchPromotionSchemes = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/user/promotion-schemes', {
+      const response = await fetch(`${API_URL}/api/user/promotion-schemes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -147,7 +147,7 @@ const AdminScreen = () => {
     }
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch(`http://localhost:5000/api/admin/users/${selectedUser}/roles`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${selectedUser}/roles`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ const AdminScreen = () => {
     }
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/admin/users', {
+      const response = await fetch(`${API_URL}/api/admin/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ const AdminScreen = () => {
     }
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch('http://localhost:5000/api/admin/products', {
+      const response = await fetch(`${API_URL}/api/admin/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ const AdminScreen = () => {
   const handleApproveOrder = async (orderId) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch(`http://localhost:5000/api/user/orders/${orderId}/approve`, {
+      const response = await fetch(`${API_URL}/api/user/orders/${orderId}/approve`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -272,7 +272,7 @@ const AdminScreen = () => {
   const handleApproveChallan = async (challanId) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
-      const response = await fetch(`http://localhost:5000/api/user/challans/${challanId}/approve`, {
+      const response = await fetch(`${API_URL}/api/user/challans/${challanId}/approve`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
