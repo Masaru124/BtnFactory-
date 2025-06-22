@@ -1,36 +1,71 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator
+} from 'react-native';
+import { useRouter } from 'expo-router';
 import { AuthContext } from '../contexts/AuthContext';
+import { API_URL } from "../../constants/api"
 
 const RegisterScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const authContext = useContext(AuthContext);
 
+   useEffect(() => {
+    fetch(`${API_URL}/api/register`)
+      .then(res => console.log("✅ Connection test succeeded:", res.status))
+      .catch(err => console.error("❌ Connection test failed:", err.message));
+  }, []);
+
   const handleRegister = async () => {
+    setError('');
+    if (!username || !password) {
+      setError('Please fill in both fields.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
       const data = await response.json();
+
       if (response.ok) {
-        Alert.alert('Success', 'Registration successful. Please login.');
-        navigation.goBack();
+        setUsername('');
+        setPassword('');
+        router.replace('/'); // Redirect to login
       } else {
-        Alert.alert('Registration failed', data.message || 'Unknown error');
+        setError(data.message || 'Registration failed. Try again.');
       }
-    } catch (error) {
-      Alert.alert('Registration failed', 'Network error');
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Text style={styles.title}>Create an Account</Text>
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
       <TextInput
         placeholder="Username"
         value={username}
@@ -45,9 +80,17 @@ const RegisterScreen = () => {
         style={styles.input}
         secureTextEntry
       />
-      <Button title="Register" onPress={handleRegister} />
-      <Button title="Back to Login" onPress={() => navigation.goBack()} />
-    </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#007bff" style={{ marginVertical: 12 }} />
+      ) : (
+        <>
+          <Button title="Register" onPress={handleRegister} />
+          <View style={styles.spacer} />
+          <Button title="Back to Login" onPress={() => router.replace('/')} />
+        </>
+      )}
+    </KeyboardAvoidingView>
   );
 };
 
@@ -55,19 +98,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 28,
+    marginBottom: 24,
     textAlign: 'center',
+    fontWeight: '600',
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
+    height: 48,
+    borderColor: '#ccc',
     borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
     marginBottom: 12,
-    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
+  spacer: {
+    height: 12,
   },
 });
 

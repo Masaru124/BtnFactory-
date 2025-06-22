@@ -16,7 +16,7 @@ const AppNavigator = () => {
     // If context is undefined, render login screen as fallback
     return (
       <Stack.Navigator>
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="hello" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
       </Stack.Navigator>
     );
@@ -28,7 +28,7 @@ const AppNavigator = () => {
     <Stack.Navigator>
       {userToken == null ? (
         <>
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="hello" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
         </>
       ) : userRoles && userRoles.includes('admin') ? (

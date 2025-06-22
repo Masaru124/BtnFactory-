@@ -1,4 +1,2 @@
-import React from 'react';
-import App from './App';
-
-export default App;
+import LoginScreen from './screens/LoginScreen';
+export default LoginScreen;

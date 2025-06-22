@@ -1,31 +1,48 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { useRouter } from 'expo-router';
 import { AuthContext } from '../contexts/AuthContext';
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation();
-  const authContext = useContext(AuthContext);
-
-  if (!authContext) {
-    throw new Error('AuthContext is null');
-  }
-
-  const { signIn } = authContext;
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useContext(AuthContext);
+  const router = useRouter();
 
   const handleLogin = async () => {
+    setError('');
+    setLoading(true);
+
     try {
       await signIn({ username, password });
     } catch (e) {
-      Alert.alert('Login failed', e.message || 'Unknown error');
+      setError(e.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Text style={styles.title}>Welcome Back</Text>
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
       <TextInput
         placeholder="Username"
         value={username}
@@ -40,11 +57,18 @@ const LoginScreen = () => {
         style={styles.input}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.registerLink}>Don't have an account? Register here</Text>
-      </TouchableOpacity>
-    </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#007bff" style={{ marginVertical: 12 }} />
+      ) : (
+        <>
+          <Button title="Login" onPress={handleLogin} />
+          <TouchableOpacity onPress={() => router.replace('/register')}>
+            <Text style={styles.registerLink}>Don't have an account? Register here</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </KeyboardAvoidingView>
   );
 };
 
@@ -52,24 +76,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 28,
+    marginBottom: 24,
     textAlign: 'center',
+    fontWeight: '600',
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
+    height: 48,
+    borderColor: '#ccc',
     borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
     marginBottom: 12,
-    paddingHorizontal: 10,
+    textAlign: 'center',
   },
   registerLink: {
-    marginTop: 15,
+    marginTop: 18,
     color: 'blue',
     textAlign: 'center',
+    textDecorationLine: 'underline',
   },
 });
 
