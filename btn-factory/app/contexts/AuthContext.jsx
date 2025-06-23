@@ -67,14 +67,17 @@ const AuthProvider = ({ children }) => {
 
   // Sign out
   const signOut = async () => {
+    console.log('Sign out called');
     try {
       await AsyncStorage.multiRemove(['userToken', 'userRoles', 'userDepartments']);
+      console.log('AsyncStorage cleared');
     } catch (err) {
       console.error('❌ Error during logout:', err);
     } finally {
       setUserToken(null);
       setUserRoles([]);
       setUserDepartments([]);
+      console.log('Local state cleared');
     }
   };
 
