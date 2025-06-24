@@ -2,35 +2,21 @@ const express = require("express");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const authenticateToken = require("../middleware/authenticateToken");
+const authorizeRoles = require("../middleware/authorizeRoles");
+const { validateRoles, validateDepartments } = require("../utils/validateRolesDepartments");
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
 // Admin route to add user
-router.post("/users", async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes("admin"))
-    return res.sendStatus(403);
-
+router.post("/users", authorizeRoles(["admin"]), async (req, res) => {
   const { username, password, roles, departments } = req.body;
 
-  // Validate roles and departments
-  const validRoles = ["admin", "staff", "user"];
-  const validDepartments = [
-    "Production",
-    "Quality",
-    "Packing",
-    "Accounting",
-    "Inventory",
-  ];
-
-  if (!Array.isArray(roles) || !roles.every((r) => validRoles.includes(r))) {
+  if (!validateRoles(roles)) {
     return res.status(400).json({ message: "Invalid roles" });
   }
-  if (
-    !Array.isArray(departments) ||
-    !departments.every((d) => validDepartments.includes(d))
-  ) {
+  if (!validateDepartments(departments)) {
     return res.status(400).json({ message: "Invalid departments" });
   }
 
@@ -46,10 +32,7 @@ router.post("/users", async (req, res) => {
 });
 
 // Admin route to get all users
-router.get("/users", async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes("admin"))
-    return res.sendStatus(403);
-
+router.get("/users", authorizeRoles(["admin"]), async (req, res) => {
   try {
     const users = await User.find({}, "username roles departments");
     res.json(users);
@@ -61,10 +44,7 @@ router.get("/users", async (req, res) => {
 });
 
 // Admin route to delete a user by username
-router.delete("/users/:username", async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes("admin"))
-    return res.sendStatus(403);
-
+router.delete("/users/:username", authorizeRoles(["admin"]), async (req, res) => {
   const { username } = req.params;
 
   try {
@@ -81,29 +61,14 @@ router.delete("/users/:username", async (req, res) => {
 });
 
 // Admin route to update user roles and departments
-router.put("/users/:username/role", async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes("admin"))
-    return res.sendStatus(403);
-
+router.put("/users/:username/role", authorizeRoles(["admin"]), async (req, res) => {
   const { username } = req.params;
   const { roles, departments } = req.body;
 
-  const validRoles = ["admin", "staff", "user"];
-  const validDepartments = [
-    "Production",
-    "Quality",
-    "Packing",
-    "Accounting",
-    "Inventory",
-  ];
-
-  if (!Array.isArray(roles) || !roles.every((r) => validRoles.includes(r))) {
+  if (!validateRoles(roles)) {
     return res.status(400).json({ message: "Invalid roles" });
   }
-  if (
-    !Array.isArray(departments) ||
-    !departments.every((d) => validDepartments.includes(d))
-  ) {
+  if (!validateDepartments(departments)) {
     return res.status(400).json({ message: "Invalid departments" });
   }
 
@@ -123,10 +88,7 @@ router.put("/users/:username/role", async (req, res) => {
 });
 
 // Admin route to add product
-router.post("/products", async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes("admin"))
-    return res.sendStatus(403);
-
+router.post("/products", authorizeRoles(["admin"]), async (req, res) => {
   const { name, description, price, stock } = req.body;
   try {
     const newProduct = new Product({ name, description, price, stock });

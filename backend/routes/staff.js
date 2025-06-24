@@ -2,15 +2,14 @@ const express = require('express');
 const Product = require('../models/Product');
 const Delivery = require('../models/Delivery');
 const authenticateToken = require('../middleware/authenticateToken');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 const router = express.Router();
 
 router.use(authenticateToken);
 
 // Staff route to manage products (update stock)
-router.put('/products/:id', async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes('staff')) return res.sendStatus(403);
-
+router.put('/products/:id', authorizeRoles(['staff']), async (req, res) => {
   const { id } = req.params;
   const { stock } = req.body;
   try {
@@ -26,9 +25,7 @@ router.put('/products/:id', async (req, res) => {
 });
 
 // Staff route to manage delivery
-router.post('/delivery', async (req, res) => {
-  if (!req.user.roles || !req.user.roles.includes('staff')) return res.sendStatus(403);
-
+router.post('/delivery', authorizeRoles(['staff']), async (req, res) => {
   const { productId, quantity, status } = req.body;
   try {
     const newDelivery = new Delivery({ productId, quantity, status });
