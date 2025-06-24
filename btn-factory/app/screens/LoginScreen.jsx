@@ -41,9 +41,10 @@ const LoginScreen = () => {
     setLoading(true);
 
     try {
-      await signIn({ username, password });
+      const roles = await signIn({ username, password });
 
-      if (userRoles?.includes('admin')) {
+      // ✅ Use roles returned from signIn for redirection
+      if (roles?.includes('admin')) {
         router.replace('/admin');
       } else {
         router.replace('/admin');

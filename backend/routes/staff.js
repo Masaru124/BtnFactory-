@@ -9,7 +9,7 @@ router.use(authenticateToken);
 
 // Staff route to manage products (update stock)
 router.put('/products/:id', async (req, res) => {
-  if (req.user.role !== 'staff') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('staff')) return res.sendStatus(403);
 
   const { id } = req.params;
   const { stock } = req.body;
@@ -27,7 +27,7 @@ router.put('/products/:id', async (req, res) => {
 
 // Staff route to manage delivery
 router.post('/delivery', async (req, res) => {
-  if (req.user.role !== 'staff') return res.sendStatus(403);
+  if (!req.user.roles || !req.user.roles.includes('staff')) return res.sendStatus(403);
 
   const { productId, quantity, status } = req.body;
   try {
