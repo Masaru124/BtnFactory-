@@ -199,6 +199,9 @@ const createDefaultAdmin = async () => {
 
 // Custom Routes
 app.use("/api/user", authenticateToken, userRoutes);
+const adminRoutes = require("./routes/admin");
+app.use("/api/admin", authenticateToken, requireAdmin, adminRoutes);
+
 
 // Start server
 app.listen(PORT, () => {
