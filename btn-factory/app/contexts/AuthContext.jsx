@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../../constants/api';
-
+import { useRouter } from 'expo-router';
+const router = useRouter();
 export const AuthContext = createContext(undefined);
 
 const AuthProvider = ({ children }) => {
@@ -65,18 +66,20 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign out
-  const signOut = async () => {
-    try {
-      await AsyncStorage.multiRemove(['userToken', 'userRoles', 'userDepartments']);
-    } catch (err) {
-      console.error('❌ Error during logout:', err);
-    } finally {
-      setUserToken(null);
-      setUserRoles([]);
-      setUserDepartments([]);
-    }
-  };
+
+
+const signOut = async () => {
+  try {
+    await AsyncStorage.multiRemove(['userToken', 'userRoles', 'userDepartments']);
+  } catch (err) {
+    console.error('Logout error:', err);
+  } finally {
+    setUserToken(null);
+    setUserRoles([]);
+    setUserDepartments([]);
+    router.replace('/'); // 👈 or wherever your login screen is
+  }
+};
 
   return (
     <AuthContext.Provider
