@@ -549,6 +549,7 @@
 // export default UserScreen;
 
 // app/user/index.jsx
+
 import React, { useContext } from "react";
 import {
   View,
@@ -557,7 +558,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -572,20 +573,17 @@ const menuItems = [
 
 export default function UserHome() {
   const { user } = useContext(AuthContext);
-  const router = useRouter();
-
-  const handleNavigate = (screen) => {
-    router.push(`/user/${screen}`);
-  };
 
   return (
     <View style={styles.container}>
       {/* Welcome Header */}
       <View style={styles.header}>
         <Text style={styles.userName}>Welcome, {user?.name || "User"}</Text>
-        <TouchableOpacity onPress={() => handleNavigate("manageProfile")}>
-          <Ionicons name="settings-outline" size={24} color="#333" />
-        </TouchableOpacity>
+        <Link href="/user/manageProfile" asChild>
+          <TouchableOpacity>
+            <Ionicons name="settings-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </Link>
       </View>
 
       {/* Menu Buttons */}
@@ -593,12 +591,11 @@ export default function UserHome() {
         data={menuItems}
         keyExtractor={(item) => item.key}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={() => handleNavigate(item.key)}
-          >
-            <Text style={styles.menuButtonText}>{item.label}</Text>
-          </TouchableOpacity>
+          <Link href={`/user/${item.key}`} asChild>
+            <TouchableOpacity style={styles.menuButton}>
+              <Text style={styles.menuButtonText}>{item.label}</Text>
+            </TouchableOpacity>
+          </Link>
         )}
         contentContainerStyle={styles.menuList}
       />
