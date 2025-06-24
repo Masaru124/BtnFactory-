@@ -99,6 +99,15 @@ router.post("/products", authorizeRoles(["admin"]), async (req, res) => {
       .status(400)
       .json({ message: "Error adding product", error: err.message });
   }
+}); 
+
+router.get("/products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching products", error: err.message });
+  }
 });
 
 module.exports = router;
