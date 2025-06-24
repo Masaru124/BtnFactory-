@@ -1,7 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL } from '../../constants/api';
-import { useRouter } from 'expo-router';
+import React, { createContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_URL } from "../../constants/api";
+import { useRouter } from "expo-router";
 const router = useRouter();
 export const AuthContext = createContext(undefined);
 
@@ -15,15 +15,15 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
-        const roles = await AsyncStorage.getItem('userRoles');
-        const departments = await AsyncStorage.getItem('userDepartments');
+        const token = await AsyncStorage.getItem("userToken");
+        const roles = await AsyncStorage.getItem("userRoles");
+        const departments = await AsyncStorage.getItem("userDepartments");
 
         setUserToken(token);
         setUserRoles(roles ? JSON.parse(roles) : []);
         setUserDepartments(departments ? JSON.parse(departments) : []);
       } catch (e) {
-        console.error('❌ Failed to restore user session:', e);
+        console.error("❌ Failed to restore user session:", e);
       } finally {
         setIsLoading(false);
       }
@@ -35,50 +35,61 @@ const AuthProvider = ({ children }) => {
   // Sign in
   const signIn = async ({ username, password }) => {
     try {
-      const response = await fetch(`${API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
+      const contentType = response.headers.get("content-type");
+
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Server returned non-JSON response:", text);
+        throw new Error("Unexpected server response format");
+      }
+
       const data = await response.json();
+
       if (!response.ok || !data.token) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || "Login failed");
       }
 
       const rolesArray = data.roles || (data.role ? [data.role] : []);
       const departmentsArray = data.departments || [];
 
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('userToken', data.token);
-      await AsyncStorage.setItem('userRoles', JSON.stringify(rolesArray));
-      await AsyncStorage.setItem('userDepartments', JSON.stringify(departmentsArray));
+      await AsyncStorage.setItem("userToken", data.token);
+      await AsyncStorage.setItem("userRoles", JSON.stringify(rolesArray));
+      await AsyncStorage.setItem(
+        "userDepartments",
+        JSON.stringify(departmentsArray)
+      );
 
-      // Set local state
       setUserToken(data.token);
       setUserRoles(rolesArray);
       setUserDepartments(departmentsArray);
 
-      return rolesArray; // 👈 So you can route after login
+      return rolesArray;
     } catch (err) {
-      console.error('❌ Login error:', err.message);
+      console.error("❌ Login error:", err.message);
       throw err;
     }
   };
 
-  // Sign out
   const signOut = async () => {
-    console.log('Sign out called');
     try {
-      await AsyncStorage.multiRemove(['userToken', 'userRoles', 'userDepartments']);
-      console.log('AsyncStorage cleared');
+      await AsyncStorage.multiRemove([
+        "userToken",
+        "userRoles",
+        "userDepartments",
+      ]);
     } catch (err) {
-      console.error('❌ Error during logout:', err);
+      console.error("Logout error:", err);
     } finally {
       setUserToken(null);
       setUserRoles([]);
       setUserDepartments([]);
-      console.log('Local state cleared');
+      router.replace("/"); // 👈 or wherever your login screen is
     }
   };
 
@@ -91,7 +102,7 @@ const AuthProvider = ({ children }) => {
         isLoading,
         signIn,
         signOut,
-        isAdmin: userRoles.includes('admin'),
+        isAdmin: userRoles.includes("admin"),
       }}
     >
       {children}

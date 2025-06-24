@@ -47,7 +47,7 @@ const LoginScreen = () => {
       if (roles?.includes('admin')) {
         router.replace('/admin');
       } else {
-        router.replace('/admin');
+        router.replace('/user');
       }
     } catch (e) {
       console.error('Login error:', e);
@@ -58,7 +58,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    // <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -137,7 +137,7 @@ const LoginScreen = () => {
           )}
         </View>
       </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+    // </TouchableWithoutFeedback>
   );
 };
 
