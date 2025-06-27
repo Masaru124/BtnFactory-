@@ -1,13 +1,27 @@
 const express = require("express");
 const User = require("../models/User");
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 const authenticateToken = require("../middleware/authenticateToken");
 const authorizeRoles = require("../middleware/authorizeRoles");
 const { validateRoles, validateDepartments } = require("../utils/validateRolesDepartments");
-
+const multer = require("multer");
+const path = require("path");
 const router = express.Router();
 
 router.use(authenticateToken);
+
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Ensure this folder exists or create it
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
 
 // Admin route to add user
 router.post("/users", authorizeRoles(["admin"]), async (req, res) => {
@@ -25,9 +39,7 @@ router.post("/users", authorizeRoles(["admin"]), async (req, res) => {
     await newUser.save();
     res.status(201).json({ message: "User created" });
   } catch (err) {
-    res
-      .status(400)
-      .json({ message: "Error creating user", error: err.message });
+    res.status(400).json({ message: "Error creating user", error: err.message });
   }
 });
 
@@ -37,9 +49,7 @@ router.get("/users", authorizeRoles(["admin"]), async (req, res) => {
     const users = await User.find({}, "username roles departments");
     res.json(users);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error fetching users", error: err.message });
+    res.status(500).json({ message: "Error fetching users", error: err.message });
   }
 });
 
@@ -54,9 +64,7 @@ router.delete("/users/:username", authorizeRoles(["admin"]), async (req, res) =>
 
     res.json({ message: "User deleted" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error deleting user", error: err.message });
+    res.status(500).json({ message: "Error deleting user", error: err.message });
   }
 });
 
@@ -81,9 +89,7 @@ router.put("/users/:username/role", authorizeRoles(["admin"]), async (req, res) 
     await user.save();
     res.json({ message: "User roles and departments updated" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error updating user roles", error: err.message });
+    res.status(500).json({ message: "Error updating user roles", error: err.message });
   }
 });
 
@@ -95,11 +101,9 @@ router.post("/products", authorizeRoles(["admin"]), async (req, res) => {
     await newProduct.save();
     res.status(201).json({ message: "Product added" });
   } catch (err) {
-    res
-      .status(400)
-      .json({ message: "Error adding product", error: err.message });
+    res.status(400).json({ message: "Error adding product", error: err.message });
   }
-}); 
+});
 
 router.get("/products", async (req, res) => {
   try {
@@ -107,6 +111,57 @@ router.get("/products", async (req, res) => {
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: "Error fetching products", error: err.message });
+  }
+});
+
+// New Admin route to add order with file upload
+router.post("/orders", authorizeRoles(["admin"]), upload.single("poImage"), async (req, res) => {
+  try {
+    const {
+      companyName,
+      poNumber,
+      poDate,
+      casting,
+      thickness,
+      holes,
+      boxType,
+      rate,
+    } = req.body;
+
+    if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const poImagePath = req.file ? req.file.path : null;
+
+    const newOrder = new Order({
+      companyName,
+      poNumber,
+      poDate: new Date(poDate),
+      poImage: poImagePath,
+      casting,
+      thickness,
+      holes,
+      boxType,
+      rate: parseFloat(rate),
+      status: "Pending",
+      createdDate: new Date(),
+    });
+
+    await newOrder.save();
+    res.status(201).json({ message: "Order created successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error creating order", error: err.message });
+  }
+});
+
+// Optional: get all orders
+router.get("/orders", authorizeRoles(["admin"]), async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
 });
 

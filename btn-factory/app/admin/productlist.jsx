@@ -58,7 +58,7 @@ export default function ProductListScreen() {
   return (
     <SafeAreaView style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>All Products</Text>
+        <Text style={styles.title}>All Orders</Text>
 
         {products.length === 0 ? (
           <Text style={styles.emptyText}>No products found.</Text>
@@ -88,9 +88,9 @@ export default function ProductListScreen() {
 
       {/* Fixed Bottom Button */}
       <View style={styles.bottomBar}>
-        <Link href="/admin/add-product" asChild>
+          <Link href="/admin/create-order" asChild>
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Add Product</Text>
+            <Text style={styles.menuText}>Create order</Text>
           </TouchableOpacity>
         </Link>
       </View>
