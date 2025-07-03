@@ -12,6 +12,10 @@ const OrderSchema = new mongoose.Schema({
   rate: { type: Number, required: true },
   status: { type: String, default: 'Pending' },
   createdDate: { type: Date, default: Date.now },
+
+  // ✅ Token for tracking
+  token: { type: String, required: true, unique: true },
 });
+
 
 module.exports = mongoose.model('Order', OrderSchema);

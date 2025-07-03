@@ -1,5 +1,4 @@
 const express = require('express');
-const Product = require('../models/Product');
 const Delivery = require('../models/Delivery');
 const authenticateToken = require('../middleware/authenticateToken');
 const authorizeRoles = require('../middleware/authorizeRoles');

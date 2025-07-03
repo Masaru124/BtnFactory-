@@ -2,7 +2,6 @@ const express = require('express');
 const Order = require('../models/Order');
 const Challan = require('../models/Challan');
 const CustomerHistory = require('../models/CustomerHistory');
-const PromotionScheme = require('../models/PromotionScheme');
 const authenticateToken = require('../middleware/authenticateToken');
 
 const router = express.Router();
@@ -39,14 +38,6 @@ router.get('/customer-history', async (req, res) => {
   }
 });
 
-// Get promotion schemes
-router.get('/promotion-schemes', async (req, res) => {
-  try {
-    const promotions = await PromotionScheme.find();
-    res.json(promotions);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching promotion schemes', error: err.message });
-  }
-});
+
 
 module.exports = router;

@@ -1,6 +1,5 @@
 const express = require("express");
 const User = require("../models/User");
-const Product = require("../models/Product");
 const Order = require("../models/Order");
 const authenticateToken = require("../middleware/authenticateToken");
 const authorizeRoles = require("../middleware/authorizeRoles");
@@ -93,67 +92,79 @@ router.put("/users/:username/role", authorizeRoles(["admin"]), async (req, res) 
   }
 });
 
-// Admin route to add product
-router.post("/products", authorizeRoles(["admin"]), async (req, res) => {
-  const { name, description, price, stock } = req.body;
-  try {
-    const newProduct = new Product({ name, description, price, stock });
-    await newProduct.save();
-    res.status(201).json({ message: "Product added" });
-  } catch (err) {
-    res.status(400).json({ message: "Error adding product", error: err.message });
-  }
-});
-
-router.get("/products", async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching products", error: err.message });
-  }
-});
 
 // New Admin route to add order with file upload
-router.post("/orders", authorizeRoles(["admin"]), upload.single("poImage"), async (req, res) => {
-  try {
-    const {
-      companyName,
-      poNumber,
-      poDate,
-      casting,
-      thickness,
-      holes,
-      boxType,
-      rate,
-    } = req.body;
+const crypto = require("crypto"); // for random token generation
 
-    if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
-      return res.status(400).json({ message: "Missing required fields" });
+router.post(
+  "/orders",
+  authorizeRoles(["admin"]),
+  upload.single("poImage"),
+  async (req, res) => {
+    try {
+      const {
+        companyName,
+        poNumber,
+        poDate,
+        casting,
+        thickness,
+        holes,
+        boxType,
+        rate,
+      } = req.body;
+
+      if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const poImagePath = req.file ? req.file.path : null;
+
+      // ✅ Generate unique token (e.g. 8-character alphanumeric)
+      const token = crypto.randomBytes(4).toString("hex").toUpperCase();
+
+      const newOrder = new Order({
+        companyName,
+        poNumber,
+        poDate: new Date(poDate),
+        poImage: poImagePath,
+        casting,
+        thickness,
+        holes,
+        boxType,
+        rate: parseFloat(rate),
+        status: "Pending",
+        createdDate: new Date(),
+        token, // ✅ save token
+      });
+
+      await newOrder.save();
+
+      res.status(201).json({
+        message: "Order created successfully",
+        token: newOrder.token, // ✅ return token to frontend
+        order: newOrder,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Error creating order", error: err.message });
+    }
+  }
+);
+
+
+router.get("/orders/track/:token", async (req, res) => {
+  try {
+    const order = await Order.findOne({ token: req.params.token });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
     }
 
-    const poImagePath = req.file ? req.file.path : null;
-
-    const newOrder = new Order({
-      companyName,
-      poNumber,
-      poDate: new Date(poDate),
-      poImage: poImagePath,
-      casting,
-      thickness,
-      holes,
-      boxType,
-      rate: parseFloat(rate),
-      status: "Pending",
-      createdDate: new Date(),
-    });
-
-    await newOrder.save();
-    res.status(201).json({ message: "Order created successfully" });
+    res.json(order);
   } catch (err) {
-    res.status(500).json({ message: "Error creating order", error: err.message });
+    res.status(500).json({ message: "Error fetching order", error: err.message });
   }
 });
+
 
 // Optional: get all orders
 router.get("/orders", authorizeRoles(["admin"]), async (req, res) => {
