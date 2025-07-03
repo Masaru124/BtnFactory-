@@ -3,38 +3,46 @@ import { Link } from 'expo-router';
 import { useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function AdminDashboard() {
   const { signOut } = useContext(AuthContext);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Admin Dashboard</Text>
-      <Text style={styles.subtitle}>Manage your app</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Admin Panel</Text>
+        <Text style={styles.subtitle}>Manage users, products, and settings</Text>
+      </View>
 
+      {/* Menu Cards */}
       <View style={styles.menuContainer}>
         <Link href="/admin/add-user" asChild>
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Add User</Text>
+          <TouchableOpacity style={styles.card}>
+            <Text style={styles.cardTitle}>➕ Add User</Text>
+            <Text style={styles.cardDescription}>Create new user accounts</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/admin/manage-users" asChild>
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Manage Users</Text>
+          <TouchableOpacity style={styles.card}>
+            <Text style={styles.cardTitle}>👥 Manage Users</Text>
+            <Text style={styles.cardDescription}>Edit or remove existing users</Text>
           </TouchableOpacity>
         </Link>
 
         <Link href="/admin/productlist" asChild>
-          <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>All Product</Text>
+          <TouchableOpacity style={styles.card}>
+            <Text style={styles.cardTitle}>📦 Orders Inventory</Text>
+            <Text style={styles.cardDescription}>View and manage orders</Text>
           </TouchableOpacity>
         </Link>
       </View>
 
+      {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-        <Text style={styles.logoutText}>Logout</Text>
+        <Text style={styles.logoutText}>🚪 Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -43,54 +51,64 @@ export default function AdminDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: width * 0.08,
-    paddingTop: 80,
+    backgroundColor: '#f5f5f5',
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+  },
+  header: {
+    marginBottom: 30,
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
-    color: '#1e293b',
-    marginBottom: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontWeight: 'bold',
+    color: '#333',
   },
   subtitle: {
     fontSize: 16,
-    color: '#64748b',
-    fontWeight: '500',
-    marginBottom: 32,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: '#666',
+    marginTop: 5,
   },
   menuContainer: {
-    gap: 16,
-    marginBottom: 40,
+    gap: 15,
   },
-  menuItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
-    backgroundColor: '#ffffff',
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
-  menuText: {
-    fontSize: 16,
-    color: '#1e293b',
+  cardTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: '#2c3e50',
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginTop: 5,
   },
   logoutButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    marginTop: 'auto',
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: '#e74c3c',
     borderRadius: 8,
-    alignSelf: 'flex-start',
+    padding: 15,
+    alignItems: 'center',
   },
   logoutText: {
-    color: '#ef4444',
-    fontSize: 16,
+    color: '#e74c3c',
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontSize: 16,
   },
 });
