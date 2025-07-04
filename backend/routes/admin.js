@@ -121,6 +121,7 @@ router.post(
 
       // ✅ Generate unique token (e.g. 8-character alphanumeric)
       const token = crypto.randomBytes(4).toString("hex").toUpperCase();
+      console.log(token)
 
       const newOrder = new Order({
         companyName,
@@ -175,5 +176,60 @@ router.get("/orders", authorizeRoles(["admin"]), async (req, res) => {
     res.status(500).json({ message: "Error fetching orders", error: err.message });
   }
 });
+
+// Admin route to delete an order by ID
+const mongoose = require("mongoose");
+
+
+router.delete("/orders/:identifier", authorizeRoles(["admin"]), async (req, res) => {
+  const { identifier } = req.params;
+
+  try {
+    // Validate identifier exists
+    if (!identifier) {
+      return res.status(400).json({ message: "Order identifier is required" });
+    }
+
+    // Build query (case-insensitive for poNumber)
+    const isObjectId = mongoose.Types.ObjectId.isValid(identifier);
+    const query = isObjectId
+      ? { _id: identifier }
+      : { poNumber: { $regex: new RegExp(`^${identifier}$`, 'i') } };
+
+    // Find and delete
+    const deletedOrder = await Order.findOneAndDelete(query);
+
+    if (!deletedOrder) {
+      return res.status(404).json({
+        message: "Order not found",
+        details: `No order found with ${isObjectId ? 'ID' : 'PO Number'}: ${identifier}`
+      });
+    }
+
+    // Success response
+    res.json({
+      success: true,
+      message: "Order deleted successfully",
+      deletedOrderId: deletedOrder._id,
+      poNumber: deletedOrder.poNumber
+    });
+
+  } catch (err) {
+    console.error("Delete order error:", err);
+
+    // Handle specific error types
+    if (err.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid order ID format" });
+    }
+
+    // Generic error response
+    res.status(500).json({
+      message: "Error deleting order",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+
 
 module.exports = router;
