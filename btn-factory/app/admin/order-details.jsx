@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   Button,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,6 +16,7 @@ import { API_URL } from "../../constants/api";
 export default function OrderDetailsScreen() {
   const { order } = useLocalSearchParams();
   const orderData = JSON.parse(order);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const statusColors = {
     pending: "#F59E0B",
@@ -40,11 +42,16 @@ export default function OrderDetailsScreen() {
   };
 
   const deleteOrder = async () => {
+    setIsDeleting(true);
+    console.log("Deleting order with PO:", orderData.poNumber);
+
     try {
       const token = await AsyncStorage.getItem("userToken");
+      console.log("Token:", token);
+      if (!token) throw new Error("Authentication token not found");
 
       const response = await fetch(
-        `${API_URL}/api/admin/orders/${orderData._id}`,
+        `${API_URL}/api/admin/orders/${orderData.poNumber}`,
         {
           method: "DELETE",
           headers: {
@@ -53,23 +60,28 @@ export default function OrderDetailsScreen() {
           },
         }
       );
+      console.log("Response status:", response.status);
 
-      if (response.ok) {
-        Alert.alert("Success", "Order deleted successfully", [
-          {
-            text: "OK",
-            onPress: () => {
-              router.replace("/admin/productlist");
-            },
-          },
-        ]);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete order");
+      const respText = await response.text(); // capture raw response
+      console.log("Response body:", respText);
+
+      if (!response.ok) {
+        throw new Error(
+          respText || response.statusText || "Failed to delete order."
+        );
       }
+
+      Alert.alert("Success", "Order deleted successfully.", [
+        {
+          text: "OK",
+          onPress: () => router.replace("/admin/productlist"),
+        },
+      ]);
     } catch (error) {
-      console.error("Delete error:", error);
-      Alert.alert("Error", error.message);
+      console.error("Delete error caught:", error);
+      Alert.alert("Error", error.message || "Failed to delete order.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -133,7 +145,11 @@ export default function OrderDetailsScreen() {
       </View>
 
       <View style={styles.deleteButtonContainer}>
-        <Button title="Delete Order" color="#DC2626" onPress={handleDelete} />
+        {isDeleting ? (
+          <ActivityIndicator size="small" color="#DC2626" />
+        ) : (
+          <Button title="Delete Order" color="#DC2626" onPress={handleDelete} />
+        )}
       </View>
     </ScrollView>
   );

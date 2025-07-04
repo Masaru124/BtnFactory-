@@ -9,15 +9,14 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Image,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../constants/api";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function CreateOrderScreen() {
   const [formData, setFormData] = useState({
@@ -34,20 +33,21 @@ export default function CreateOrderScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [createdToken, setCreatedToken] = useState(null);
 
   const handleChange = (name, value) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*', 'application/pdf'],
+        type: ["image/*", "application/pdf"],
         copyToCacheDirectory: true,
       });
-      
+
       if (result.type === "success") {
-        handleChange('poImage', result);
+        handleChange("poImage", result);
       }
     } catch (error) {
       console.error("Document picker error:", error);
@@ -65,10 +65,10 @@ export default function CreateOrderScreen() {
       });
 
       if (!result.canceled) {
-        handleChange('poImage', {
+        handleChange("poImage", {
           uri: result.assets[0].uri,
           name: `po_image_${Date.now()}.jpg`,
-          type: 'image/jpeg'
+          type: "image/jpeg",
         });
       }
     } catch (error) {
@@ -78,15 +78,15 @@ export default function CreateOrderScreen() {
   };
 
   const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(Platform.OS === "ios");
     if (selectedDate) {
-      handleChange('poDate', selectedDate);
+      handleChange("poDate", selectedDate);
     }
   };
 
   const handleSubmit = async () => {
     const { companyName, poNumber, poDate, casting, thickness, holes, boxType, rate } = formData;
-    
+
     if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
       Alert.alert("Required Fields", "Please fill all required fields");
       return;
@@ -98,17 +98,17 @@ export default function CreateOrderScreen() {
       const data = new FormData();
 
       Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'poDate') {
-          data.append(key, value.toISOString().split('T')[0]);
-        } else if (key === 'poImage' && value) {
+        if (key === "poDate") {
+          data.append(key, value.toISOString().split("T")[0]);
+        } else if (key === "poImage" && value) {
           data.append(key, {
             uri: value.uri,
             name: value.name,
-            type: value.type || 'application/octet-stream',
+            type: value.type || "application/octet-stream",
           });
-        } else if (key === 'casting' && value === 'Other') {
+        } else if (key === "casting" && value === "Other") {
           data.append(key, formData.otherCasting);
-        } else if (value && key !== 'otherCasting') {
+        } else if (value && key !== "otherCasting") {
           data.append(key, value);
         }
       });
@@ -124,9 +124,8 @@ export default function CreateOrderScreen() {
       const responseData = await response.json();
 
       if (response.ok) {
-        Alert.alert("Success", "Order created successfully", [
-          { text: "OK", onPress: () => resetForm() }
-        ]);
+        setCreatedToken(responseData.token); // Display token on screen
+        resetForm();
       } else {
         throw new Error(responseData.message || "Failed to create order");
       }
@@ -154,39 +153,45 @@ export default function CreateOrderScreen() {
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.header}>Create New Order</Text>
 
+      {createdToken && (
+        <View style={styles.tokenContainer}>
+          <Text style={styles.tokenTitle}>Order Created Successfully</Text>
+          <Text style={styles.tokenText}>Token: {createdToken}</Text>
+        </View>
+      )}
+
       {/* Company Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Company Details</Text>
-        
+
         <FormField
           label="Company/Customer Name *"
           value={formData.companyName}
-          onChangeText={(text) => handleChange('companyName', text)}
+          onChangeText={(text) => handleChange("companyName", text)}
           placeholder="Enter company name"
         />
-        
+
         <FormField
           label="P.O. Number *"
           value={formData.poNumber}
-          onChangeText={(text) => handleChange('poNumber', text)}
+          onChangeText={(text) => handleChange("poNumber", text)}
           placeholder="Enter PO number"
-          keyboardType="default"
         />
-        
+
         <View>
           <Text style={styles.label}>P.O. Date *</Text>
-          <TouchableOpacity 
-            style={styles.dateInput} 
+          <TouchableOpacity
+            style={styles.dateInput}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={styles.dateText}>
-              {formData.poDate.toLocaleDateString('en-IN')}
+              {formData.poDate.toLocaleDateString("en-IN")}
             </Text>
             <MaterialIcons name="date-range" size={20} color="#555" />
           </TouchableOpacity>
@@ -199,18 +204,18 @@ export default function CreateOrderScreen() {
             />
           )}
         </View>
-        
+
         <View style={styles.uploadContainer}>
           <Text style={styles.label}>P.O. Document/Image</Text>
           <View style={styles.uploadButtons}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.uploadButton, styles.uploadButtonLeft]}
               onPress={pickDocument}
             >
               <MaterialIcons name="insert-drive-file" size={18} color="#fff" />
               <Text style={styles.uploadButtonText}>Upload File</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.uploadButton, styles.uploadButtonRight]}
               onPress={pickImage}
             >
@@ -229,14 +234,14 @@ export default function CreateOrderScreen() {
       {/* Product Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Product Details</Text>
-        
+
         <Text style={styles.label}>Casting Type *</Text>
         <View style={styles.radioGroup}>
           {["Rod", "Sheet", "Other"].map((option) => (
             <TouchableOpacity
               key={option}
               style={styles.radioOption}
-              onPress={() => handleChange('casting', option)}
+              onPress={() => handleChange("casting", option)}
             >
               <View style={styles.radioCircle}>
                 {formData.casting === option && <View style={styles.selectedRb} />}
@@ -245,37 +250,37 @@ export default function CreateOrderScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        
+
         {formData.casting === "Other" && (
           <FormField
             label="Specify Casting Type *"
             value={formData.otherCasting}
-            onChangeText={(text) => handleChange('otherCasting', text)}
+            onChangeText={(text) => handleChange("otherCasting", text)}
             placeholder="Enter casting type"
           />
         )}
-        
+
         <FormField
           label="Thickness (mm) *"
           value={formData.thickness}
-          onChangeText={(text) => handleChange('thickness', text)}
+          onChangeText={(text) => handleChange("thickness", text)}
           placeholder="Enter thickness"
           keyboardType="numeric"
         />
-        
+
         <FormField
           label="Holes *"
           value={formData.holes}
-          onChangeText={(text) => handleChange('holes', text)}
+          onChangeText={(text) => handleChange("holes", text)}
           placeholder="Enter number of holes"
           keyboardType="numeric"
         />
-        
+
         <Text style={styles.label}>Box Type *</Text>
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={formData.boxType}
-            onValueChange={(value) => handleChange('boxType', value)}
+            onValueChange={(value) => handleChange("boxType", value)}
             style={styles.picker}
             dropdownIconColor="#555"
           >
@@ -283,20 +288,19 @@ export default function CreateOrderScreen() {
             <Picker.Item label="SD" value="SD" />
           </Picker>
         </View>
-        
+
         <FormField
           label="Rate (₹) *"
           value={formData.rate}
-          onChangeText={(text) => handleChange('rate', text)}
+          onChangeText={(text) => handleChange("rate", text)}
           placeholder="Enter rate per unit"
           keyboardType="decimal-pad"
           prefix="₹"
         />
       </View>
 
-      {/* Submit Button */}
-      <TouchableOpacity 
-        style={styles.submitButton} 
+      <TouchableOpacity
+        style={styles.submitButton}
         onPress={handleSubmit}
         disabled={loading}
       >
@@ -341,6 +345,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
+  tokenContainer: {
+    backgroundColor: "#e8f8f5",
+    padding: 16,
+    borderRadius: 10,
+    borderColor: "#2ecc71",
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  tokenTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2ecc71",
+    marginBottom: 4,
+  },
+  tokenText: {
+    fontSize: 15,
+    color: "#1e8449",
+  },
   section: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -368,8 +390,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
     borderColor: "#ddd",
     borderWidth: 1,
@@ -388,9 +410,9 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   dateInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#fff",
     borderColor: "#ddd",
     borderWidth: 1,
@@ -406,14 +428,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   uploadButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
   },
   uploadButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 12,
     borderRadius: 8,
   },

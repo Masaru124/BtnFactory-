@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,12 @@ import {
   Platform,
   TouchableOpacity,
   SafeAreaView,
-  RefreshControl
+  RefreshControl,
 } from "react-native";
 import { API_URL } from "../../constants/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 function OrderListScreen() {
   const [orders, setOrders] = useState([]);
@@ -54,6 +55,12 @@ function OrderListScreen() {
     fetchOrders();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();
+    }, [])
+  );
+
   if (loading && orders.length === 0) {
     return (
       <View style={styles.loadingContainer}>
@@ -68,7 +75,7 @@ function OrderListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Order Management</Text>
         <Text style={styles.subtitle}>
-          {orders.length} order{orders.length !== 1 ? 's' : ''} in system
+          {orders.length} order{orders.length !== 1 ? "s" : ""} in system
         </Text>
       </View>
 
@@ -99,27 +106,35 @@ function OrderListScreen() {
           >
             <TouchableOpacity style={styles.orderCard}>
               <View style={styles.orderHeader}>
-                <Text style={styles.orderNumber}>#{item._id?.slice(-6).toUpperCase()}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                <Text style={styles.orderNumber}>
+                  #{item._id?.slice(-6).toUpperCase()}
+                </Text>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(item.status) },
+                  ]}
+                >
                   <Text style={styles.statusText}>{item.status}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.orderDetails}>
                 <Text style={styles.companyName}>{item.companyName}</Text>
-                <Text style={styles.poNumber}>PO: {item.poNumber || 'N/A'}</Text>
+                <Text style={styles.poNumber}>PO: {item.poNumber || "N/A"}</Text>
               </View>
-              
+
               <View style={styles.orderFooter}>
                 <Text style={styles.dateText}>
-                  {new Date(item.createdDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
+                  {new Date(item.createdDate).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
                   })}
                 </Text>
                 <Text style={styles.itemsCount}>
-                  {item.items?.length || 0} item{item.items?.length !== 1 ? 's' : ''}
+                  {item.items?.length || 0} item
+                  {item.items?.length !== 1 ? "s" : ""}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -138,42 +153,42 @@ function OrderListScreen() {
 
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
-    case 'pending':
-      return '#f59e0b';
-    case 'completed':
-      return '#10b981';
-    case 'shipped':
-      return '#3b82f6';
-    case 'cancelled':
-      return '#ef4444';
+    case "pending":
+      return "#f59e0b";
+    case "completed":
+      return "#10b981";
+    case "shipped":
+      return "#3b82f6";
+    case "cancelled":
+      return "#ef4444";
     default:
-      return '#64748b';
+      return "#64748b";
   }
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
   },
   loadingText: {
     marginTop: 16,
-    color: '#64748b',
+    color: "#64748b",
     fontSize: 16,
   },
   header: {
     padding: 24,
     paddingBottom: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 6,
@@ -185,12 +200,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1e293b',
+    fontWeight: "700",
+    color: "#1e293b",
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748b',
+    color: "#64748b",
     marginTop: 4,
   },
   listContent: {
@@ -198,13 +213,13 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   orderCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -215,15 +230,15 @@ const styles = StyleSheet.create({
     }),
   },
   orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   orderNumber: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
+    fontWeight: "600",
+    color: "#1e293b",
   },
   statusBadge: {
     paddingVertical: 4,
@@ -231,66 +246,66 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
+    fontWeight: "600",
+    textTransform: "capitalize",
   },
   orderDetails: {
     marginBottom: 12,
   },
   companyName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
+    fontWeight: "600",
+    color: "#1e293b",
     marginBottom: 4,
   },
   poNumber: {
     fontSize: 14,
-    color: '#64748b',
+    color: "#64748b",
   },
   orderFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   dateText: {
     fontSize: 13,
-    color: '#64748b',
+    color: "#64748b",
   },
   itemsCount: {
     fontSize: 13,
-    color: '#64748b',
-    fontWeight: '500',
+    color: "#64748b",
+    fontWeight: "500",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
   },
   emptyText: {
     fontSize: 16,
-    color: '#64748b',
+    color: "#64748b",
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: "#94a3b8",
   },
   createButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 24,
     right: 24,
-    backgroundColor: '#4f46e5',
+    backgroundColor: "#4f46e5",
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: '#4f46e5',
+        shadowColor: "#4f46e5",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
@@ -301,9 +316,9 @@ const styles = StyleSheet.create({
     }),
   },
   createButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 4,
   },
 });
