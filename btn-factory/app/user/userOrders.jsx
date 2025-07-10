@@ -1,345 +1,346 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  SafeAreaView,
   TextInput,
-  Button,
-  ScrollView,
+  StyleSheet,
   Alert,
+  TouchableOpacity,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { AuthContext } from "../contexts/AuthContext";
+import { Picker } from "@react-native-picker/picker";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { MaterialIcons } from "@expo/vector-icons";
 import { API_URL } from "../../constants/api";
+import { AuthContext } from "../contexts/AuthContext";
 
-export default function UserOrders() {
-  const { userToken } = useContext(AuthContext);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function CreateOrderScreen() {
+  const { token, user } = useContext(AuthContext);
 
-  // New states for order creation and token validation
-  const [tokenInput, setTokenInput] = useState("");
-  const [tokenValid, setTokenValid] = useState(false);
-  const [validatedOrder, setValidatedOrder] = useState(null);
-  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [formData, setFormData] = useState({
+    companyName: "",
+    poNumber: "",
+    poDate: new Date(),
+    poImage: null,
+    casting: "Rod",
+    otherCasting: "",
+    thickness: "",
+    holes: "",
+    boxType: "DD",
+    rate: "",
+  });
 
-  // Form fields for new order
-  const [companyName, setCompanyName] = useState("");
-  const [poNumber, setPoNumber] = useState("");
-  const [poDate, setPoDate] = useState("");
-  const [casting, setCasting] = useState("");
-  const [thickness, setThickness] = useState("");
-  const [holes, setHoles] = useState("");
-  const [boxType, setBoxType] = useState("");
-  const [rate, setRate] = useState("");
-  const [rawMaterials, setRawMaterials] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [createdToken, setCreatedToken] = useState(null);
 
-  const fetchOrders = async () => {
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const pickDocument = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/user/orders`, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-          Accept: "application/json",
-        },
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*", "application/pdf"],
+        copyToCacheDirectory: true,
+      });
+      if (result.type === "success") {
+        handleChange("poImage", result);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to select document");
+    }
+  };
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        handleChange("poImage", {
+          uri: result.assets[0].uri,
+          name: `po_image_${Date.now()}.jpg`,
+          type: "image/jpeg",
+        });
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to select image");
+    }
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      handleChange("poDate", selectedDate);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const { companyName, poNumber, poDate, casting, thickness, holes, boxType, rate } = formData;
+
+    if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
+      Alert.alert("Required Fields", "Please fill all required fields");
+      return;
+    }
+
+    if (!user || !user._id) {
+      Alert.alert("Error", "User not authenticated");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "poDate") {
+          data.append(key, value.toISOString().split("T")[0]);
+        } else if (key === "poImage" && value) {
+          data.append(key, {
+            uri: value.uri,
+            name: value.name,
+            type: value.type || "application/octet-stream",
+          });
+        } else if (key === "casting" && value === "Other") {
+          data.append("casting", formData.otherCasting);
+        } else if (value && key !== "otherCasting") {
+          data.append(key, value);
+        }
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error(`Error fetching orders: ${res.status}`, text);
-        throw new Error("Failed to fetch orders");
-      }
+      data.append("userId", user._id);
 
-      const data = await res.json();
-      setOrders(data);
+      const response = await fetch(`${API_URL}/api/admin/orders`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        setCreatedToken(responseData.token);
+        resetForm();
+      } else {
+        throw new Error(responseData.message || "Failed to create order");
+      }
     } catch (error) {
-      console.error("❌ Order fetch error:", error.message);
+      Alert.alert("Error", error.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const validateToken = async () => {
-    if (!tokenInput) {
-      Alert.alert("Validation Error", "Please enter a token number.");
-      return;
-    }
-    try {
-      const res = await fetch(`${API_URL}/api/user/orders/validate-token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({ token: tokenInput }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        Alert.alert("Invalid Token", data.message || "Token validation failed.");
-        setTokenValid(false);
-        setValidatedOrder(null);
-        return;
-      }
-      const data = await res.json();
-      setTokenValid(true);
-      setValidatedOrder(data.order);
-      Alert.alert("Token Validated", "Token is valid. You can specify raw materials.");
-    } catch (error) {
-      console.error("❌ Token validation error:", error.message);
-      Alert.alert("Error", "Failed to validate token.");
-    }
+  const resetForm = () => {
+    setFormData({
+      companyName: "",
+      poNumber: "",
+      poDate: new Date(),
+      poImage: null,
+      casting: "Rod",
+      otherCasting: "",
+      thickness: "",
+      holes: "",
+      boxType: "DD",
+      rate: "",
+    });
   };
-
-  const createOrder = async () => {
-    if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
-      Alert.alert("Validation Error", "Please fill all required fields.");
-      return;
-    }
-    setCreatingOrder(true);
-    try {
-      const res = await fetch(`${API_URL}/api/user/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({
-          companyName,
-          poNumber,
-          poDate,
-          casting,
-          thickness,
-          holes,
-          boxType,
-          rate,
-          rawMaterials,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        Alert.alert("Order Creation Failed", data.message || "Failed to create order.");
-        setCreatingOrder(false);
-        return;
-      }
-      const data = await res.json();
-      Alert.alert("Success", "Order created successfully with token: " + data.token);
-      // Reset form
-      setCompanyName("");
-      setPoNumber("");
-      setPoDate("");
-      setCasting("");
-      setThickness("");
-      setHoles("");
-      setBoxType("");
-      setRate("");
-      setRawMaterials("");
-      setTokenInput("");
-      setTokenValid(false);
-      setValidatedOrder(null);
-      fetchOrders();
-    } catch (error) {
-      console.error("❌ Order creation error:", error.message);
-      Alert.alert("Error", "Failed to create order.");
-    } finally {
-      setCreatingOrder(false);
-    }
-  };
-
-  useEffect(() => {
-    if (userToken) fetchOrders();
-  }, [userToken]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <Text style={styles.heading}>Your Orders</Text>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <Text style={styles.header}>Create New Order</Text>
 
-        {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#007bff" />
+      {createdToken && (
+        <View style={styles.tokenContainer}>
+          <Text style={styles.tokenTitle}>Order Created Successfully</Text>
+          <Text style={styles.tokenText}>Token: {createdToken}</Text>
+        </View>
+      )}
+
+      {/* Company Details */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Company Details</Text>
+
+        <FormField
+          label="Company/Customer Name *"
+          value={formData.companyName}
+          onChangeText={(text) => handleChange("companyName", text)}
+          placeholder="Enter company name"
+        />
+
+        <FormField
+          label="P.O. Number *"
+          value={formData.poNumber}
+          onChangeText={(text) => handleChange("poNumber", text)}
+          placeholder="Enter PO number"
+        />
+
+        <View>
+          <Text style={styles.label}>P.O. Date *</Text>
+          <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.dateText}>{formData.poDate.toLocaleDateString("en-IN")}</Text>
+            <MaterialIcons name="date-range" size={20} color="#555" />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={formData.poDate}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
+        </View>
+
+        <View style={styles.uploadContainer}>
+          <Text style={styles.label}>P.O. Document/Image</Text>
+          <View style={styles.uploadButtons}>
+            <TouchableOpacity style={[styles.uploadButton, styles.uploadButtonLeft]} onPress={pickDocument}>
+              <MaterialIcons name="insert-drive-file" size={18} color="#fff" />
+              <Text style={styles.uploadButtonText}>Upload File</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.uploadButton, styles.uploadButtonRight]} onPress={pickImage}>
+              <MaterialIcons name="image" size={18} color="#fff" />
+              <Text style={styles.uploadButtonText}>Upload Image</Text>
+            </TouchableOpacity>
           </View>
-        ) : orders.length === 0 ? (
-          <View style={styles.center}>
-            <Text style={styles.emptyText}>No orders found.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={orders}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Order #{item._id}</Text>
-                <Text style={styles.cardText}>
-                  Date: {new Date(item.createdAt).toLocaleDateString()}
-                </Text>
-                <Text style={styles.cardText}>
-                  Time: {new Date(item.createdAt).toLocaleTimeString()}
-                </Text>
-                {item.status && (
-                  <Text style={styles.cardText}>Status: {item.status}</Text>
-                )}
+          {formData.poImage && <Text style={styles.fileName}>{formData.poImage.name || "Selected file"}</Text>}
+        </View>
+      </View>
+
+      {/* Product Details */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Product Details</Text>
+
+        <Text style={styles.label}>Casting Type *</Text>
+        <View style={styles.radioGroup}>
+          {["Rod", "Sheet", "Other"].map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={styles.radioOption}
+              onPress={() => handleChange("casting", option)}
+            >
+              <View style={styles.radioCircle}>
+                {formData.casting === option && <View style={styles.selectedRb} />}
               </View>
-            )}
-            contentContainerStyle={styles.list}
+              <Text style={styles.radioText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {formData.casting === "Other" && (
+          <FormField
+            label="Specify Casting Type *"
+            value={formData.otherCasting}
+            onChangeText={(text) => handleChange("otherCasting", text)}
+            placeholder="Enter casting type"
           />
         )}
 
-        <View style={styles.divider} />
-
-        <Text style={styles.subHeading}>Validate Token</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter token number"
-          value={tokenInput}
-          onChangeText={setTokenInput}
-          autoCapitalize="characters"
-        />
-        <Button title="Validate Token" onPress={validateToken} />
-
-        {tokenValid && validatedOrder && (
-          <>
-            <Text style={styles.subHeading}>Specify Raw Materials</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter raw materials"
-              value={rawMaterials}
-              onChangeText={setRawMaterials}
-            />
-          </>
-        )}
-
-        <Text style={styles.subHeading}>Create New Order</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Company Name"
-          value={companyName}
-          onChangeText={setCompanyName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="PO Number"
-          value={poNumber}
-          onChangeText={setPoNumber}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="PO Date (YYYY-MM-DD)"
-          value={poDate}
-          onChangeText={setPoDate}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Casting"
-          value={casting}
-          onChangeText={setCasting}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Thickness"
-          value={thickness}
-          onChangeText={setThickness}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Holes"
-          value={holes}
-          onChangeText={setHoles}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Box Type"
-          value={boxType}
-          onChangeText={setBoxType}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Rate"
-          value={rate}
-          onChangeText={setRate}
+        <FormField
+          label="Thickness (mm) *"
+          value={formData.thickness}
+          onChangeText={(text) => handleChange("thickness", text)}
+          placeholder="Enter thickness"
           keyboardType="numeric"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Raw Materials"
-          value={rawMaterials}
-          onChangeText={setRawMaterials}
+
+        <FormField
+          label="Holes *"
+          value={formData.holes}
+          onChangeText={(text) => handleChange("holes", text)}
+          placeholder="Enter number of holes"
+          keyboardType="numeric"
         />
-        <Button title={creatingOrder ? "Creating..." : "Create Order"} onPress={createOrder} disabled={creatingOrder} />
-      </ScrollView>
-    </SafeAreaView>
+
+        <Text style={styles.label}>Box Type *</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.boxType}
+            onValueChange={(value) => handleChange("boxType", value)}
+            style={styles.picker}
+            dropdownIconColor="#555"
+          >
+            <Picker.Item label="DD" value="DD" />
+            <Picker.Item label="SD" value="SD" />
+          </Picker>
+        </View>
+
+        <FormField
+          label="Rate (₹) *"
+          value={formData.rate}
+          onChangeText={(text) => handleChange("rate", text)}
+          placeholder="Enter rate per unit"
+          keyboardType="decimal-pad"
+          prefix="₹"
+        />
+      </View>
+
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Create Order</Text>}
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
+const FormField = ({ label, value, onChangeText, placeholder, keyboardType, prefix }) => (
+  <View>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.inputContainer}>
+      {prefix && <Text style={styles.prefix}>{prefix}</Text>}
+      <TextInput
+        style={[styles.input, prefix && { paddingLeft: 0 }]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        keyboardType={keyboardType}
+        placeholderTextColor="#999"
+      />
+    </View>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f4f6f8",
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  subHeading: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#555",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 6,
-    color: "#007bff",
-  },
-  cardText: {
-    fontSize: 14,
-    color: "#444",
-  },
-  center: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 30,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#666",
-  },
-  input: {
-    backgroundColor: "#fff",
-    marginHorizontal: 20,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    borderColor: "#ccc",
-    borderWidth: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#ccc",
-    marginVertical: 20,
-    marginHorizontal: 20,
-  },
+  container: { padding: 16, paddingBottom: 80 },
+  header: { fontSize: 24, fontWeight: "bold", marginBottom: 16 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: "500", marginBottom: 4 },
+  inputContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#f0f0f0", borderRadius: 8, paddingHorizontal: 8 },
+  prefix: { marginRight: 4, fontSize: 16, color: "#333" },
+  input: { flex: 1, height: 40 },
+  dateInput: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#f0f0f0", borderRadius: 8, paddingHorizontal: 12, height: 40 },
+  dateText: { color: "#333" },
+  uploadContainer: { marginTop: 12 },
+  uploadButtons: { flexDirection: "row", marginTop: 4 },
+  uploadButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10, backgroundColor: "#4a90e2" },
+  uploadButtonLeft: { borderTopLeftRadius: 8, borderBottomLeftRadius: 8, marginRight: 1 },
+  uploadButtonRight: { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
+  uploadButtonText: { color: "#fff", marginLeft: 6 },
+  fileName: { marginTop: 6, fontSize: 12, color: "#444" },
+  radioGroup: { flexDirection: "row", marginBottom: 8 },
+  radioOption: { flexDirection: "row", alignItems: "center", marginRight: 16 },
+  radioCircle: { height: 18, width: 18, borderRadius: 9, borderWidth: 2, borderColor: "#444", alignItems: "center", justifyContent: "center", marginRight: 6 },
+  selectedRb: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#444" },
+  radioText: { fontSize: 14 },
+  pickerContainer: { backgroundColor: "#f0f0f0", borderRadius: 8 },
+  picker: { height: 40, width: "100%" },
+  submitButton: { marginTop: 16, backgroundColor: "#1e88e5", paddingVertical: 12, borderRadius: 8, alignItems: "center" },
+  submitButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  tokenContainer: { backgroundColor: "#e0f7fa", padding: 12, borderRadius: 8, marginBottom: 16 },
+  tokenTitle: { fontWeight: "bold", fontSize: 16, color: "#00796b" },
+  tokenText: { fontSize: 14, color: "#004d40", marginTop: 4 },
 });

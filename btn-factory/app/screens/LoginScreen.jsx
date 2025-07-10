@@ -65,7 +65,7 @@ const LoginScreen = () => {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.title}>Welcome Back to Fabricana Supreme </Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
           </View>
 

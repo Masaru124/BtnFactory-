@@ -560,28 +560,41 @@ import {
 } from "react-native";
 import { Link } from "expo-router";
 import { AuthContext } from "../contexts/AuthContext";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const menuItems = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "allChallanList", label: "All Challan List" },
-  { key: "userOrders", label: "User Orders" },
-  { key: "adminOrderList", label: "Admin Order List" },
-  { key: "customerHistory", label: "Customer History" },
-  { key: "promotionSchemes", label: "Promotion Schemes" },
+  { 
+    key: "trackorder", 
+    label: "Track Order", 
+    icon: "truck-fast-outline" 
+  },
+  { 
+    key: "userOrders", 
+    label: "Create Order", 
+    icon: "plus-circle-outline" 
+  },
+  { 
+    key: "ordersListScreen", 
+    label: "My Orders", 
+    icon: "format-list-bulleted" 
+  },
 ];
 
 export default function UserHome() {
   const { user } = useContext(AuthContext);
+  const { signOut } = useContext(AuthContext);
 
   return (
     <View style={styles.container}>
       {/* Welcome Header */}
       <View style={styles.header}>
-        <Text style={styles.userName}>Welcome, {user?.name || "User"}</Text>
+        <View style={styles.userInfo}>
+          <Text style={styles.greeting}>Hello,</Text>
+          <Text style={styles.userName}>{user?.name || "User"}</Text>
+        </View>
         <Link href="/user/manageProfile" asChild>
-          <TouchableOpacity>
-            <Ionicons name="settings-outline" size={24} color="#333" />
+          <TouchableOpacity style={styles.settingsButton}>
+            <Ionicons name="settings-outline" size={26} color="#4a4a4a" />
           </TouchableOpacity>
         </Link>
       </View>
@@ -589,45 +602,116 @@ export default function UserHome() {
       {/* Menu Buttons */}
       <FlatList
         data={menuItems}
+        contentContainerStyle={styles.menuList}
         keyExtractor={(item) => item.key}
         renderItem={({ item }) => (
           <Link href={`/user/${item.key}`} asChild>
             <TouchableOpacity style={styles.menuButton}>
+              <MaterialCommunityIcons 
+                name={item.icon} 
+                size={24} 
+                color="#5d5d5d" 
+                style={styles.menuIcon}
+              />
               <Text style={styles.menuButtonText}>{item.label}</Text>
+              <Ionicons 
+                name="chevron-forward" 
+                size={20} 
+                color="#a1a1a1" 
+              />
             </TouchableOpacity>
           </Link>
         )}
-        contentContainerStyle={styles.menuList}
       />
+
+      {/* Logout Button */}
+      <TouchableOpacity 
+        style={styles.logoutButton} 
+        onPress={signOut}
+      >
+        <Ionicons name="log-out-outline" size={22} color="#e74c3c" />
+        <Text style={styles.logoutText}>Sign Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50, backgroundColor: "#f8f9fa" },
-  header: {
+  container: { 
+    flex: 1, 
+    paddingTop: 50, 
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    backgroundColor: "#f8f9fa" 
+  },
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 30,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eaeaea",
+  },
+  userInfo: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: 16,
+    color: "#7a7a7a",
+    marginBottom: 4,
   },
   userName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#343a40",
+    fontSize: 24,
+    fontWeight: "600",
+    color: "#333",
   },
-  menuList: { paddingHorizontal: 20 },
+  settingsButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+  },
+  menuList: {
+    paddingBottom: 20,
+  },
   menuButton: {
     backgroundColor: "#ffffff",
-    paddingVertical: 15,
+    paddingVertical: 18,
     paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 10,
+    borderRadius: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
     elevation: 2,
+  },
+  menuIcon: {
+    marginRight: 15,
+    width: 24,
   },
   menuButtonText: {
     fontSize: 16,
-    color: "#212529",
+    color: "#333",
+    flex: 1,
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    marginTop: 'auto',
+    marginBottom: 30,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ffecec",
+  },
+  logoutText: {
+    color: "#e74c3c",
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 10,
   },
 });
