@@ -152,19 +152,37 @@ router.post(
 );
 
 
+// router.get("/orders/track/:token", async (req, res) => {
+//   try {
+//     const order = await Order.findOne({ token: req.params.token });
+
+//     if (!order) {
+//       return res.status(404).json({ message: "Order not found" });
+//     }
+
+//     res.json(order);
+//   } catch (err) {
+//     res.status(500).json({ message: "Error fetching order", error: err.message });
+//   }
+// });
+
 router.get("/orders/track/:token", async (req, res) => {
   try {
-    const order = await Order.findOne({ token: req.params.token });
+    console.log("Received token:", req.params.token); // 👈 log it
 
+    const order = await Order.findOne({ token: req.params.token });
     if (!order) {
+      console.log("No order found for token:", req.params.token); // 👈 log failure
       return res.status(404).json({ message: "Order not found" });
     }
 
     res.json(order);
   } catch (err) {
+    console.error("❌ Track error:", err.message);
     res.status(500).json({ message: "Error fetching order", error: err.message });
   }
 });
+
 
 
 // Optional: get all orders
