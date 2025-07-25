@@ -6,7 +6,7 @@ import {
   ScrollView,
   Image,
   Alert,
-  Button,
+  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
@@ -89,8 +89,14 @@ export default function OrderDetailsScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Order Details</Text>
-        <Text style={styles.subtitle}>Order #{orderData.poNumber}</Text>
       </View>
+
+      {orderData.token && (
+        <>
+          <SectionTitle title="Tracking Information" />
+          <DetailRow label="Tracking Token" value={orderData.token} />
+        </>
+      )}
 
       <View style={styles.card}>
         <SectionTitle title="Order Information" />
@@ -121,13 +127,19 @@ export default function OrderDetailsScreen() {
           label="Rate"
           value={`₹${orderData.rate.toLocaleString("en-IN")}`}
         />
-
-        {orderData.token && (
-          <>
-            <SectionTitle title="Tracking Information" />
-            <DetailRow label="Tracking Token" value={orderData.token} />
-          </>
-        )}
+        <DetailRow label="Lining" value={orderData.linings} />
+        <DetailRow label="Laser Cutting" value={orderData.laser} />
+        <DetailRow label="Polish Type" value={orderData.polishType} />
+        <DetailRow label="Quantity" value={orderData.quantity?.toString()} />
+        <DetailRow label="Packing Option" value={orderData.packingOption} />
+        <DetailRow
+          label="Dispatch Date"
+          value={
+            orderData.dispatchDate
+              ? new Date(orderData.dispatchDate).toLocaleDateString("en-IN")
+              : "-"
+          }
+        />
 
         {orderData.poImage && (
           <>
@@ -148,7 +160,9 @@ export default function OrderDetailsScreen() {
         {isDeleting ? (
           <ActivityIndicator size="small" color="#DC2626" />
         ) : (
-          <Button title="Delete Order" color="#DC2626" onPress={handleDelete} />
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+            <Text style={styles.deleteBtnText}>Delete Order</Text>
+          </TouchableOpacity>
         )}
       </View>
     </ScrollView>
@@ -169,14 +183,14 @@ const DetailRow = ({ label, value, valueStyle }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#ffffffff",
   },
   header: {
-    padding: 24,
-    paddingBottom: 16,
-    backgroundColor: "#FFFFFF",
+    padding: 10,
+    paddingBottom: 8,
+    backgroundColor: "#ffffffff",
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
+    borderBottomColor: "#ffffff",
   },
   title: {
     fontSize: 22,
@@ -189,14 +203,8 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   card: {
-    margin: 16,
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 1,
     overflow: "hidden",
   },
   sectionTitle: {
@@ -248,5 +256,25 @@ const styles = StyleSheet.create({
   },
   deleteButtonContainer: {
     margin: 20,
+  },
+
+  deleteBtn: {
+    borderColor: "#DC2626", // Tailwind red-600
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+
+  deleteBtnText: {
+    color: "#DC2626",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

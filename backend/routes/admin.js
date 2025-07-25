@@ -115,6 +115,92 @@ router.put(
 const crypto = require("crypto"); // for random token generation
 
 router.post(
+  "/orders/user",
+  authorizeRoles(["user"]),
+  upload.single("poImage"),
+   async (req, res) => {
+    try {
+      const {
+        companyName,
+        poNumber,
+        poDate,
+        casting,
+        thickness,
+        holes,
+        boxType,
+        rate,
+
+        // ✅ New optional fields
+        rawMaterials,
+        linings,
+        laser,
+        polishType,
+        quantity,
+        packingOption,
+        buttonImage,
+        dispatchDate
+      } = req.body;
+
+      if (
+        !companyName ||
+        !poNumber ||
+        !poDate ||
+        !casting ||
+        !thickness ||
+        !holes ||
+        !boxType ||
+        !rate
+      ) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const poImagePath = req.file ? req.file.path : null;
+
+      const token = crypto.randomBytes(4).toString("hex").toUpperCase();
+      console.log(token);
+
+      const newOrder = new Order({
+        companyName,
+        poNumber,
+        poDate: new Date(poDate),
+        poImage: poImagePath,
+        casting,
+        thickness,
+        holes,
+        boxType,
+        rate: parseFloat(rate),
+        status: "Pending",
+        createdDate: new Date(),
+        token,
+
+        // ✅ Save new optional fields
+        rawMaterials,
+        linings,
+        laser,
+        polishType,
+        quantity,
+        packingOption,
+        buttonImage,
+        dispatchDate: dispatchDate ? new Date(dispatchDate) : undefined,
+      });
+
+      await newOrder.save();
+
+      res.status(201).json({
+        message: "Order created successfully",
+        token: newOrder.token,
+        order: newOrder,
+      });
+    } catch (err) {
+      res
+        .status(500)
+        .json({ message: "Error creating order", error: err.message });
+    }
+  }
+);
+
+
+router.post(
   "/orders",
   authorizeRoles(["admin"]),
   upload.single("poImage"),

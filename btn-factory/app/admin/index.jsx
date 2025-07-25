@@ -1,9 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
-import { Link } from 'expo-router';
-import { useContext } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
-
-const { width, height } = Dimensions.get('window');
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
+import { Link } from "expo-router";
+import { useContext } from "react";
+import { AuthContext } from "../contexts/AuthContext"; // <- adjust if needed
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function AdminDashboard() {
   const { signOut } = useContext(AuthContext);
@@ -12,103 +17,114 @@ export default function AdminDashboard() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Admin Panel</Text>
-        <Text style={styles.subtitle}>Manage users, products, and settings</Text>
+        <Text style={styles.title}>Fabricanna Supreme</Text>
+        <Text style={styles.subtitle}>Welcome, Admin</Text>
       </View>
 
-      {/* Menu Cards */}
-      <View style={styles.menuContainer}>
-        <Link href="/admin/add-user" asChild>
-          <TouchableOpacity style={styles.card}>
-            <Text style={styles.cardTitle}>➕ Add User</Text>
-            <Text style={styles.cardDescription}>Create new user accounts</Text>
-          </TouchableOpacity>
-        </Link>
-
-        <Link href="/admin/manage-users" asChild>
-          <TouchableOpacity style={styles.card}>
-            <Text style={styles.cardTitle}>👥 Manage Users</Text>
-            <Text style={styles.cardDescription}>Edit or remove existing users</Text>
-          </TouchableOpacity>
-        </Link>
-
-        <Link href="/admin/productlist" asChild>
-          <TouchableOpacity style={styles.card}>
-            <Text style={styles.cardTitle}>📦 Orders Inventory</Text>
-            <Text style={styles.cardDescription}>View and manage orders</Text>
-          </TouchableOpacity>
-        </Link>
+      {/* Menu */}
+      <View style={styles.menu}>
+        <AdminCard
+          icon="person-add-alt"
+          title="Add User"
+          desc="Create new team accounts"
+          href="/admin/add-user"
+        />
+        <AdminCard
+          icon="group"
+          title="Manage Users"
+          desc="Edit or delete user access"
+          href="/admin/manage-users"
+        />
+        <AdminCard
+          icon="inventory"
+          title="Orders Inventory"
+          desc="Track and manage orders"
+          href="/admin/productlist"
+        />
       </View>
 
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-        <Text style={styles.logoutText}>🚪 Logout</Text>
+      {/* Logout */}
+      <TouchableOpacity style={styles.logoutBtn} onPress={signOut}>
+        <MaterialIcons name="logout" size={20} color="#cc0000ff" />
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
+function AdminCard({ icon, title, desc, href }) {
+  return (
+    <Link href={href} asChild>
+      <TouchableOpacity style={styles.card}>
+        <MaterialIcons name={icon} size={28} color="#4e4e4e" />
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.cardDesc}>{desc}</Text>
+        </View>
+      </TouchableOpacity>
+    </Link>
+  );
+}
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
+    paddingHorizontal: 20,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: 32,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "#0186bbff",
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
+    fontSize: 20,
+    color: "#000000ff",
+    marginTop: 4,
   },
-  menuContainer: {
-    gap: 15,
+  menu: {
+    gap: 20,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fdfdfdff",
+    borderColor: "#000000",
+    borderWidth: 0.19,
+    padding: 16,
+  },
+  cardContent: {
+    marginLeft: 12,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#2c3e50',
+    color: "#000",
   },
-  cardDescription: {
-    fontSize: 14,
-    color: '#7f8c8d',
-    marginTop: 5,
+  cardDesc: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 2,
   },
-  logoutButton: {
-    marginTop: 'auto',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e74c3c',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
+  logoutBtn: {
+    marginTop: "auto",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 12,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    borderWidth: 0.5,
+    borderColor: "#cf0000ff",
+    marginBottom: 20,
   },
   logoutText: {
-    color: '#e74c3c',
-    fontWeight: '600',
+    color: "#c90000ff",
     fontSize: 16,
+    fontWeight: "500",
   },
 });

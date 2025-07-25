@@ -1,18 +1,21 @@
 const validRoles = ["admin", "staff", "user"];
 const validDepartments = [
-  "Production",
-  "Quality",
+  "Raw Material",
+  " Casting",
+  "Turning",
+  "Polish",
   "Packing",
-  "Accounting",
-  "Inventory",
 ];
 
 function validateRoles(roles) {
-  return Array.isArray(roles) && roles.every(r => validRoles.includes(r));
+  return Array.isArray(roles) && roles.every((r) => validRoles.includes(r));
 }
 
 function validateDepartments(departments) {
-  return Array.isArray(departments) && departments.every(d => validDepartments.includes(d));
+  return (
+    Array.isArray(departments) &&
+    departments.every((d) => validDepartments.includes(d))
+  );
 }
 
 module.exports = {

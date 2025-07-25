@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// imports
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -11,14 +12,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_URL } from "../../constants/api";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
+import { AuthContext } from "../contexts/AuthContext";
+import { API_URL } from "../../constants/api";
 
 export default function CreateOrderScreen() {
+  const { userToken } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     companyName: "",
     poNumber: "",
@@ -30,51 +30,22 @@ export default function CreateOrderScreen() {
     holes: "",
     boxType: "DD",
     rate: "",
+    linings: "",
+    laser: "",
+    polishType: "",
+    quantity: "",
+    packingOption: "",
+    buttonImage: null,
+    dispatchDate: null,
   });
+
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDispatchPicker, setShowDispatchPicker] = useState(false);
   const [createdToken, setCreatedToken] = useState(null);
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "application/pdf"],
-        copyToCacheDirectory: true,
-      });
-
-      if (result.type === "success") {
-        handleChange("poImage", result);
-      }
-    } catch (error) {
-      console.error("Document picker error:", error);
-      Alert.alert("Error", "Failed to select document");
-    }
-  };
-
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      if (!result.canceled) {
-        handleChange("poImage", {
-          uri: result.assets[0].uri,
-          name: `po_image_${Date.now()}.jpg`,
-          type: "image/jpeg",
-        });
-      }
-    } catch (error) {
-      console.error("Image picker error:", error);
-      Alert.alert("Error", "Failed to select image");
-    }
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -84,23 +55,49 @@ export default function CreateOrderScreen() {
     }
   };
 
-  const handleSubmit = async () => {
-    const { companyName, poNumber, poDate, casting, thickness, holes, boxType, rate } = formData;
+  const handleDispatchDateChange = (event, selectedDate) => {
+    setShowDispatchPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      handleChange("dispatchDate", selectedDate);
+    }
+  };
 
-    if (!companyName || !poNumber || !poDate || !casting || !thickness || !holes || !boxType || !rate) {
+  const handleSubmit = async () => {
+    const {
+      companyName,
+      poNumber,
+      poDate,
+      casting,
+      thickness,
+      holes,
+      boxType,
+      rate,
+    } = formData;
+
+    if (
+      !companyName ||
+      !poNumber ||
+      !poDate ||
+      !casting ||
+      !thickness ||
+      !holes ||
+      !boxType ||
+      !rate
+    ) {
       Alert.alert("Required Fields", "Please fill all required fields");
       return;
     }
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("userToken");
       const data = new FormData();
 
       Object.entries(formData).forEach(([key, value]) => {
-        if (key === "poDate") {
+        if (!value || key === "otherCasting") return;
+
+        if (key === "poDate" || key === "dispatchDate") {
           data.append(key, value.toISOString().split("T")[0]);
-        } else if (key === "poImage" && value) {
+        } else if ((key === "poImage" || key === "buttonImage") && value?.uri) {
           data.append(key, {
             uri: value.uri,
             name: value.name,
@@ -108,26 +105,32 @@ export default function CreateOrderScreen() {
           });
         } else if (key === "casting" && value === "Other") {
           data.append(key, formData.otherCasting);
-        } else if (value && key !== "otherCasting") {
+        } else {
           data.append(key, value);
         }
       });
 
+      // ✅ Log FormData content (for debugging)
+      for (let pair of data.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
       const response = await fetch(`${API_URL}/api/admin/orders`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${userToken}`, // ✅ Don't set 'Content-Type' manually
         },
         body: data,
       });
 
-      const responseData = await response.json();
-
       if (response.ok) {
-        setCreatedToken(responseData.token); // Display token on screen
+        const responseData = await response.json();
+        setCreatedToken(responseData.token);
         resetForm();
       } else {
-        throw new Error(responseData.message || "Failed to create order");
+        const errorText = await response.text();
+        console.error("Server response:", errorText);
+        throw new Error("Failed to create order. Server returned error.");
       }
     } catch (error) {
       console.error("Create order error:", error);
@@ -149,6 +152,13 @@ export default function CreateOrderScreen() {
       holes: "",
       boxType: "DD",
       rate: "",
+      linings: "",
+      laser: "",
+      polishType: "",
+      quantity: "",
+      packingOption: "",
+      buttonImage: null,
+      dispatchDate: null,
     });
   };
 
@@ -204,31 +214,6 @@ export default function CreateOrderScreen() {
             />
           )}
         </View>
-
-        <View style={styles.uploadContainer}>
-          <Text style={styles.label}>P.O. Document/Image</Text>
-          <View style={styles.uploadButtons}>
-            <TouchableOpacity
-              style={[styles.uploadButton, styles.uploadButtonLeft]}
-              onPress={pickDocument}
-            >
-              <MaterialIcons name="insert-drive-file" size={18} color="#fff" />
-              <Text style={styles.uploadButtonText}>Upload File</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.uploadButton, styles.uploadButtonRight]}
-              onPress={pickImage}
-            >
-              <MaterialIcons name="image" size={18} color="#fff" />
-              <Text style={styles.uploadButtonText}>Upload Image</Text>
-            </TouchableOpacity>
-          </View>
-          {formData.poImage && (
-            <Text style={styles.fileName}>
-              {formData.poImage.name || "Selected file"}
-            </Text>
-          )}
-        </View>
       </View>
 
       {/* Product Details Section */}
@@ -244,7 +229,9 @@ export default function CreateOrderScreen() {
               onPress={() => handleChange("casting", option)}
             >
               <View style={styles.radioCircle}>
-                {formData.casting === option && <View style={styles.selectedRb} />}
+                {formData.casting === option && (
+                  <View style={styles.selectedRb} />
+                )}
               </View>
               <Text style={styles.radioText}>{option}</Text>
             </TouchableOpacity>
@@ -276,6 +263,42 @@ export default function CreateOrderScreen() {
           keyboardType="numeric"
         />
 
+        <FormField
+          label="Linings"
+          value={formData.linings}
+          onChangeText={(text) => handleChange("linings", text)}
+          placeholder="Enter linings"
+        />
+
+        <FormField
+          label="Laser"
+          value={formData.laser}
+          onChangeText={(text) => handleChange("laser", text)}
+          placeholder="Enter laser details"
+        />
+
+        <FormField
+          label="Polish Type"
+          value={formData.polishType}
+          onChangeText={(text) => handleChange("polishType", text)}
+          placeholder="Enter polish type"
+        />
+
+        <FormField
+          label="Quantity"
+          value={formData.quantity}
+          onChangeText={(text) => handleChange("quantity", text)}
+          placeholder="Enter quantity"
+          keyboardType="numeric"
+        />
+
+        <FormField
+          label="Packing Option"
+          value={formData.packingOption}
+          onChangeText={(text) => handleChange("packingOption", text)}
+          placeholder="Enter packing option"
+        />
+
         <Text style={styles.label}>Box Type *</Text>
         <View style={styles.pickerContainer}>
           <Picker
@@ -297,6 +320,30 @@ export default function CreateOrderScreen() {
           keyboardType="decimal-pad"
           prefix="₹"
         />
+
+        {/* Dispatch Date */}
+        <View>
+          <Text style={styles.label}>Dispatch Date</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowDispatchPicker(true)}
+          >
+            <Text style={styles.dateText}>
+              {formData.dispatchDate
+                ? formData.dispatchDate.toLocaleDateString("en-IN")
+                : "Select date"}
+            </Text>
+            <MaterialIcons name="date-range" size={20} color="#555" />
+          </TouchableOpacity>
+          {showDispatchPicker && (
+            <DateTimePicker
+              value={formData.dispatchDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={handleDispatchDateChange}
+            />
+          )}
+        </View>
       </View>
 
       <TouchableOpacity
@@ -314,18 +361,25 @@ export default function CreateOrderScreen() {
   );
 }
 
-const FormField = ({ label, value, onChangeText, placeholder, keyboardType, prefix }) => (
-  <View>
+const FormField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  prefix,
+}) => (
+  <View style={{ marginBottom: 16 }}>
     <Text style={styles.label}>{label}</Text>
-    <View style={styles.inputContainer}>
+    <View style={styles.inputWrapper}>
       {prefix && <Text style={styles.prefix}>{prefix}</Text>}
       <TextInput
-        style={[styles.input, prefix && { paddingLeft: 0 }]}
+        style={styles.input}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         keyboardType={keyboardType}
-        placeholderTextColor="#999"
+        placeholderTextColor="#aaa"
       />
     </View>
   </View>
@@ -334,190 +388,156 @@ const FormField = ({ label, value, onChangeText, placeholder, keyboardType, pref
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: "#f9f9f9",
-    flexGrow: 1,
-    paddingBottom: 40,
+    backgroundColor: "#ffffffff",
   },
   header: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    textAlign: "center",
+    fontWeight: "700",
+    color: "#1F2937", // dark text
     marginBottom: 20,
-  },
-  tokenContainer: {
-    backgroundColor: "#e8f8f5",
-    padding: 16,
-    borderRadius: 10,
-    borderColor: "#2ecc71",
-    borderWidth: 1,
-    marginBottom: 20,
-  },
-  tokenTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#2ecc71",
-    marginBottom: 4,
-  },
-  tokenText: {
-    fontSize: 15,
-    color: "#1e8449",
   },
   section: {
     backgroundColor: "#fff",
+    padding: 1,
     borderRadius: 12,
-    padding: 16,
     marginBottom: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#2c3e50",
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    marginBottom: 12,
+    color: "#1F2937",
   },
   label: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#34495e",
-    marginBottom: 8,
+    color: "#6B7280",
+    marginBottom: 10,
   },
-  inputContainer: {
+  inputWrapper: {
+    height: 50,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  prefix: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 1,
     paddingHorizontal: 12,
-    fontSize: 14,
-    color: "#555",
   },
   input: {
     flex: 1,
-    padding: Platform.OS === "ios" ? 14 : 12,
+    paddingVertical: 15,
     fontSize: 14,
-    color: "#333",
+    color: "#111827",
   },
-  dateInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#fff",
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: Platform.OS === "ios" ? 14 : 12,
-    marginBottom: 16,
-  },
-  dateText: {
+  prefix: {
+    marginRight: 6,
     fontSize: 14,
-    color: "#333",
+    color: "#6B7280",
   },
-  uploadContainer: {
-    marginBottom: 16,
+  pickerContainer: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 1,
+    overflow: "hidden",
+    marginBottom: 10,
   },
-  uploadButtons: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  uploadButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-    borderRadius: 8,
-  },
-  uploadButtonLeft: {
-    backgroundColor: "#3498db",
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    marginRight: 1,
-  },
-  uploadButtonRight: {
-    backgroundColor: "#2ecc71",
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-  },
-  uploadButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-    marginLeft: 8,
-  },
-  fileName: {
-    fontSize: 12,
-    color: "#7f8c8d",
-    marginTop: 4,
+  picker: {
+    height: 50,
+    color: "#1F2937",
   },
   radioGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 10,
   },
   radioOption: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
   },
   radioCircle: {
     height: 18,
     width: 18,
     borderRadius: 9,
-    borderWidth: 2,
-    borderColor: "#3498db",
+    borderWidth: 1,
+    borderColor: "#3B82F6",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: 6,
   },
   selectedRb: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#3498db",
+    backgroundColor: "#3B82F6",
   },
-  radioText: {
+  dateInput: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 1,
+    marginBottom: 12,
+  },
+  dateText: {
+    color: "#1F2937",
     fontSize: 14,
-    color: "#2c3e50",
   },
-  pickerContainer: {
-    backgroundColor: "#fff",
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 16,
-    overflow: "hidden",
+  uploadContainer: {
+    marginVertical: 12,
   },
-  picker: {
-    height: Platform.OS === "ios" ? 140 : 50,
-    color: "#333",
+  uploadButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  uploadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2563EB", // blue
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  uploadButtonLeft: {
+    marginRight: 8,
+  },
+  uploadButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    marginLeft: 6,
+  },
+  fileName: {
+    color: "#6B7280",
+    fontSize: 13,
+    marginTop: 4,
   },
   submitButton: {
-    backgroundColor: "#27ae60",
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: "#2563EB",
+    paddingVertical: 16,
+    borderRadius: 1,
     alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 30,
   },
   submitButtonText: {
     color: "#fff",
-    fontWeight: "600",
+    fontWeight: "bold",
     fontSize: 16,
+  },
+  tokenContainer: {
+    backgroundColor: "#DBEAFE", // light blue
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  tokenTitle: {
+    fontWeight: "bold",
+    color: "#2563EB",
+    marginBottom: 4,
+  },
+  tokenText: {
+    fontSize: 14,
+    color: "#2563EB",
   },
 });

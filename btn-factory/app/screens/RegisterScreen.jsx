@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,8 @@ import {
   StyleSheet,
   Dimensions,
   Keyboard,
-  TouchableWithoutFeedback
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AuthContext } from '../contexts/AuthContext';
 import { API_URL } from "../../constants/api";
 
 const { width } = Dimensions.get('window');
@@ -63,7 +61,8 @@ const RegisterScreen = () => {
       } else {
         setError(data.message || 'Registration failed. Please try again.');
       }
-    } catch (err) {
+    } catch (error) {
+      console.log(error)
       setError('Network error. Please check your connection.');
     } finally {
       setLoading(false);
@@ -85,7 +84,6 @@ const RegisterScreen = () => {
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Username</Text>
             <TextInput
               placeholder="Enter your username"
               placeholderTextColor="#94a3b8"
@@ -102,7 +100,6 @@ const RegisterScreen = () => {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Password</Text>
             <TextInput
               placeholder="At least 6 characters"
               placeholderTextColor="#94a3b8"
@@ -150,7 +147,7 @@ const RegisterScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffffff',
   },
   content: {
     flex: 1,
@@ -185,29 +182,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
-  input: {
-    width: '100%',
+   input: {
+    width: "100%",
     height: 56,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
+    borderWidth: 0.3,
+    // borderColor: "#000000ff",
+    borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: '#ffffff',
-    color: '#1e293b',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: "#ffffff",
+    color: "#004eccff",
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+    elevation: 0,
   },
   inputFocused: {
-    borderColor: '#6366f1',
-    shadowColor: '#6366f1',
+    borderColor: "#000000ff",
+    shadowColor: "#000000ff",
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 1,
   },
   errorText: {
     color: '#ef4444',
@@ -217,19 +210,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
-  button: {
-    width: '100%',
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: '#6366f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-    shadowColor: '#6366f1',
+ button: {
+    width: "100%",
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: "#0075faff",
+    justifyContent: "center",
+    alignItems: "center",
+    // margin:10,
+    marginTop: 8,
+    shadowColor: "#6366f1",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 0,
   },
   buttonText: {
     color: '#ffffff',

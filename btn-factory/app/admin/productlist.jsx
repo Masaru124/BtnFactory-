@@ -81,7 +81,9 @@ function OrderListScreen() {
 
       <FlatList
         data={orders}
-        keyExtractor={(item) => item._id?.toString() || Math.random().toString()}
+        keyExtractor={(item) =>
+          item._id?.toString() || Math.random().toString()
+        }
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
@@ -121,7 +123,9 @@ function OrderListScreen() {
 
               <View style={styles.orderDetails}>
                 <Text style={styles.companyName}>{item.companyName}</Text>
-                <Text style={styles.poNumber}>PO: {item.poNumber || "N/A"}</Text>
+                <Text style={styles.poNumber}>
+                  PO: {item.poNumber || "N/A"}
+                </Text>
               </View>
 
               <View style={styles.orderFooter}>
@@ -169,13 +173,13 @@ const getStatusColor = (status) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffffff",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffffff",
   },
   loadingText: {
     marginTop: 16,
@@ -184,7 +188,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 24,
-    paddingBottom: 16,
+    paddingBottom: 10,
     backgroundColor: "#ffffff",
     ...Platform.select({
       ios: {
@@ -194,12 +198,12 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
       },
       android: {
-        elevation: 3,
+        elevation: 0,
       },
     }),
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: "700",
     color: "#1e293b",
   },
@@ -214,7 +218,8 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 12,
+    borderRadius: 1,
+    borderWidth: 0.3,
     padding: 16,
     marginBottom: 12,
     ...Platform.select({
@@ -225,7 +230,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
       },
       android: {
-        elevation: 2,
+        elevation: 0,
       },
     }),
   },
@@ -233,7 +238,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 2,
   },
   orderNumber: {
     fontSize: 16,
@@ -241,9 +246,9 @@ const styles = StyleSheet.create({
     color: "#1e293b",
   },
   statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
+    paddingVertical: 2,
+    paddingHorizontal: 9,
+    borderRadius: 1,
   },
   statusText: {
     color: "#ffffff",
@@ -252,7 +257,7 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   orderDetails: {
-    marginBottom: 12,
+    marginBottom: 1,
   },
   companyName: {
     fontSize: 16,

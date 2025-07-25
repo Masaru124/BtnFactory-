@@ -5,17 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  Dimensions,
   Alert,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Link } from "expo-router";
 import { useState } from "react";
 import { API_URL } from "../../constants/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const { width } = Dimensions.get("window");
 
 export default function AddUserScreen() {
   const [username, setUsername] = useState("");
@@ -137,17 +133,17 @@ export default function AddUserScreen() {
               style={styles.picker}
               dropdownIconColor="#64748b"
             >
-              <Picker.Item label="Production" value="Production" />
-              <Picker.Item label="Quality" value="Quality" />
+              <Picker.Item label="Raw Material" value="Raw Material" />
+              <Picker.Item label="Casting" value="Casting" />
+              <Picker.Item label="Turning" value="Turning" />
+              <Picker.Item label="Polish" value="Polish" />
               <Picker.Item label="Packing" value="Packing" />
-              <Picker.Item label="Accounting" value="Accounting" />
-              <Picker.Item label="Inventory" value="Inventory" />
             </Picker>
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.button, isSubmitting && styles.buttonDisabled]} 
+        <TouchableOpacity
+          style={[styles.button, isSubmitting && styles.buttonDisabled]}
           onPress={handleAddUser}
           disabled={isSubmitting}
         >
@@ -155,12 +151,6 @@ export default function AddUserScreen() {
             {isSubmitting ? "Creating..." : "Create User"}
           </Text>
         </TouchableOpacity>
-
-        <Link href="/admin" asChild>
-          <TouchableOpacity style={styles.backButton}>
-            <Text style={styles.backButtonText}>Back to Dashboard</Text>
-          </TouchableOpacity>
-        </Link>
       </View>
     </ScrollView>
   );
@@ -173,19 +163,19 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.07,
-    paddingTop: 30,
-    backgroundColor: "#f8fafc",
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    backgroundColor: "#ffffffff",
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
     color: "#1e293b",
     marginBottom: 8,
     fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: "#64748b",
     marginBottom: 32,
     fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
@@ -194,7 +184,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
     color: "#334155",
     marginBottom: 8,
@@ -202,9 +192,9 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
+    borderWidth: 0.3,
+    borderColor: "#000000ff",
+    borderRadius: 1,
     paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: "#ffffff",
@@ -217,14 +207,14 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
       },
       android: {
-        elevation: 2,
+        elevation: 0,
       },
     }),
   },
   pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
+    borderColor: "#000000ff",
+    borderWidth: 0.3,
+    borderRadius: 1,
     overflow: "hidden",
     backgroundColor: "#ffffff",
     ...Platform.select({
@@ -235,7 +225,7 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
       },
       android: {
-        elevation: 2,
+        elevation: 0,
       },
     }),
   },
@@ -245,9 +235,9 @@ const styles = StyleSheet.create({
     color: "#1e293b",
   },
   button: {
-    backgroundColor: "#4f46e5",
+    backgroundColor: "#4678e5ff",
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 3,
     alignItems: "center",
     marginTop: 20,
     ...Platform.select({
@@ -258,7 +248,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
       },
       android: {
-        elevation: 3,
+        elevation: 1,
       },
     }),
   },
@@ -269,17 +259,6 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
-  },
-  backButton: {
-    marginTop: 20,
-    padding: 12,
-    alignItems: "center",
-  },
-  backButtonText: {
-    color: "#4f46e5",
-    fontSize: 15,
-    fontWeight: "500",
     fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
 });
