@@ -21,6 +21,22 @@ const OrderSchema = new mongoose.Schema({
   status: { type: String, default: 'Pending' },
   createdDate: { type: Date, default: Date.now },
   token: { type: String, required: true, unique: true },
+
+  // Raw Material Department fields
+  rawMaterial: {
+    materialName: { type: String },
+    quantity: { type: Number },
+    totalPrice: { type: Number },
+  },
+
+  // Casting Department fields
+  castingProcess: {
+    rawMaterialsUsed: { type: String },
+    sheetsMade: { type: Number },
+    sheetsWasted: { type: Number },
+    startTime: { type: Date },
+    endTime: { type: Date },
+  },
 });
 
 module.exports = mongoose.model('Order', OrderSchema);
