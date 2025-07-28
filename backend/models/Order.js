@@ -1,7 +1,11 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, // ✅ changed
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false,
+  }, // ✅ changed
   companyName: { type: String, required: true },
   poNumber: { type: String, required: true },
   poDate: { type: Date, required: true },
@@ -18,7 +22,7 @@ const OrderSchema = new mongoose.Schema({
   packingOption: { type: String },
   buttonImage: { type: String },
   dispatchDate: { type: Date },
-  status: { type: String, default: 'Pending' },
+  status: { type: String, default: "Pending" },
   createdDate: { type: Date, default: Date.now },
   token: { type: String, required: true, unique: true },
 
@@ -27,6 +31,7 @@ const OrderSchema = new mongoose.Schema({
     materialName: { type: String },
     quantity: { type: Number },
     totalPrice: { type: Number },
+    updatedAt: Date,
   },
 
   // Casting Department fields
@@ -39,4 +44,4 @@ const OrderSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Order', OrderSchema);
+module.exports = mongoose.model("Order", OrderSchema);

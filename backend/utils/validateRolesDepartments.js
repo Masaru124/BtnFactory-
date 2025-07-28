@@ -1,7 +1,7 @@
 const validRoles = ["admin", "staff", "user"];
 const validDepartments = [
   "Raw Material",
-  " Casting",
+  "Casting",
   "Turning",
   "Polish",
   "Packing",
