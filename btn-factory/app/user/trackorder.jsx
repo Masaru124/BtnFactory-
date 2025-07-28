@@ -11,6 +11,7 @@ import {
 import { AuthContext } from "../contexts/AuthContext";
 import { API_URL } from "../../constants/api";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import BackButton from "../../components/BackButton";
 
 const OrderTracker = () => {
   const [tokenInput, setTokenInput] = useState("");
@@ -92,11 +93,17 @@ const OrderTracker = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Track Your Order</Text>
-        <Text style={styles.subtitle}>
-          Enter your order token to check the status
-        </Text>
+        <BackButton />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Track Your Order</Text>
+        </View>
+        {/* Invisible spacer to balance the layout */}
+        <View style={{ width: 24 }} />
       </View>
+
+      <Text style={styles.subtitle}>
+        Enter your order token to check the status
+      </Text>
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -234,7 +241,6 @@ const DetailRow = ({ icon, label, value }) => (
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
     backgroundColor: "#ffffffff",
   },
   centered: {
@@ -243,23 +249,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   header: {
-    marginBottom: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  titleContainer: {
+    ...StyleSheet.absoluteFillObject, // Fill entire parent
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
-    marginTop: 30,
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000000ff",
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: "600",
   },
   subtitle: {
     fontSize: 16,
     color: "#000000ff",
-    paddingBottom: 4,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   inputContainer: {
     flexDirection: "row",
     marginBottom: 16,
+    paddingTop: 20,
+    paddingHorizontal: 20,
   },
   input: {
     flex: 1,
@@ -299,12 +316,12 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFF",
     borderRadius: 1,
-    padding: 16,
+    padding: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    borderWidth: 0.3,
+    borderWidth: 0,
     marginBottom: 16,
   },
   cardHeader: {

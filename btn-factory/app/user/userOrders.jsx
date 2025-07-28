@@ -16,6 +16,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AuthContext } from "../contexts/AuthContext";
 import { API_URL } from "../../constants/api";
+import BackButton from "../../components/BackButton";
 
 export default function CreateOrderScreen() {
   const { userToken } = useContext(AuthContext);
@@ -167,8 +168,11 @@ export default function CreateOrderScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.header}>Create New Order</Text>
-
+      <View style={styles.headerContainer}>
+        <BackButton />
+        <Text style={styles.header}>Create New Order</Text>
+        <View style={{ width: 24 }} />
+      </View>
       {createdToken && (
         <View style={styles.tokenContainer}>
           <Text style={styles.tokenTitle}>Order Created Successfully</Text>
@@ -390,11 +394,19 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#ffffffff",
   },
-  header: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1F2937", // dark text
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 20,
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1F2937",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 10,
   },
   section: {
     backgroundColor: "#fff",
@@ -439,7 +451,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     borderRadius: 1,
     overflow: "hidden",
-    marginBottom:10
+    marginBottom: 10,
   },
   picker: {
     height: 50,

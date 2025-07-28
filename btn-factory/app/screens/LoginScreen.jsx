@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Dimensions,
   Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../contexts/AuthContext";
@@ -17,6 +18,9 @@ import { AuthContext } from "../contexts/AuthContext";
 const { width } = Dimensions.get("window");
 
 const LoginScreen = () => {
+  const router = useRouter();
+  const { signIn } = useContext(AuthContext);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,15 +29,13 @@ const LoginScreen = () => {
     username: false,
     password: false,
   });
-  const { signIn } = useContext(AuthContext);
-  const router = useRouter();
 
   const handleLogin = async () => {
     setError("");
     Keyboard.dismiss();
 
     if (!username || !password) {
-      setError("Please enter both username and password");
+      setError("Please enter both username and password.");
       return;
     }
 
@@ -42,14 +44,15 @@ const LoginScreen = () => {
     try {
       const roles = await signIn({ username, password });
 
-      // ✅ Use roles returned from signIn for redirection
       if (roles?.includes("admin")) {
         router.replace("/admin");
+      } else if (roles?.includes("staff")) {
+        router.replace("/staff"); // 🔧 Redirect staff to /staff
       } else {
         router.replace("/user");
       }
     } catch (e) {
-      console.error("Login error:", e);
+      console.error("❌ Login error:", e);
       setError(e.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -57,82 +60,85 @@ const LoginScreen = () => {
   };
 
   return (
-    // <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back to Fabricana Supreme </Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-        </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back to Fabricana Supreme</Text>
+            <Text style={styles.subtitle}>Sign in to continue</Text>
+          </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <View style={styles.formGroup}>
-          <TextInput
-            placeholder="Enter your username"
-            placeholderTextColor="#94a3b8"
-            value={username}
-            onChangeText={setUsername}
-            style={[styles.input, isFocused.username && styles.inputFocused]}
-            autoCapitalize="none"
-            onFocus={() => setIsFocused({ ...isFocused, username: true })}
-            onBlur={() => setIsFocused({ ...isFocused, username: false })}
-          />
-        </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              placeholder="Username"
+              placeholderTextColor="#94a3b8"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              style={[styles.input, isFocused.username && styles.inputFocused]}
+              onFocus={() => setIsFocused({ ...isFocused, username: true })}
+              onBlur={() => setIsFocused({ ...isFocused, username: false })}
+              returnKeyType="next"
+            />
+          </View>
 
-        <View style={styles.formGroup}>
-          <TextInput
-            placeholder="Enter your password"
-            placeholderTextColor="#94a3b8"
-            value={password}
-            onChangeText={setPassword}
-            style={[styles.input, isFocused.password && styles.inputFocused]}
-            secureTextEntry
-            onFocus={() => setIsFocused({ ...isFocused, password: true })}
-            onBlur={() => setIsFocused({ ...isFocused, password: false })}
-          />
-        </View>
+          <View style={styles.formGroup}>
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor="#94a3b8"
+              value={password}
+              onChangeText={setPassword}
+              style={[styles.input, isFocused.password && styles.inputFocused]}
+              secureTextEntry
+              onFocus={() => setIsFocused({ ...isFocused, password: true })}
+              onBlur={() => setIsFocused({ ...isFocused, password: false })}
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+            />
+          </View>
 
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          onPress={() => router.push("/forgot-password")}
-        >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() => router.push("/forgot-password")}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
 
-        {loading ? (
-          <ActivityIndicator
-            size="large"
-            color="#6366f1"
-            style={styles.loadingIndicator}
-          />
-        ) : (
-          <>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleLogin}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.buttonText}>Sign In</Text>
-            </TouchableOpacity>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Dont have an account?</Text>
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color="#6366f1"
+              style={styles.loadingIndicator}
+            />
+          ) : (
+            <>
               <TouchableOpacity
-                onPress={() => router.replace("/register")}
-                activeOpacity={0.7}
+                style={styles.button}
+                onPress={handleLogin}
+                activeOpacity={0.9}
               >
-                <Text style={styles.registerLink}> Sign Up</Text>
+                <Text style={styles.buttonText}>Sign In</Text>
               </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </View>
-    </KeyboardAvoidingView>
-    // </TouchableWithoutFeedback>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Dont have an account?</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/register")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.registerLink}> Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 

@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "../../constants/api";
+import BackButton from "../../components/BackButton";
 
 export default function OrderDetailsScreen() {
   const { order } = useLocalSearchParams();
@@ -88,7 +89,12 @@ export default function OrderDetailsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Order Details</Text>
+        <BackButton />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Order Details</Text>
+        </View>
+        {/* Invisible spacer to balance the layout */}
+        <View style={{ width: 24 }} />
       </View>
 
       {orderData.token && (
@@ -184,19 +190,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffffffff",
+    marginTop: 15,
   },
   header: {
-    padding: 10,
-    paddingBottom: 8,
-    backgroundColor: "#ffffffff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#ffffff",
+    borderBottomColor: "#eee",
+  },
+  titleContainer: {
+    ...StyleSheet.absoluteFillObject, // Fill entire parent
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "600",
-    color: "#1E293B",
-    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,

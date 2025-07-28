@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { AuthContext } from "../contexts/AuthContext";
 import { API_URL } from "../../constants/api";
+import BackButton from "../../components/BackButton";
 
 const ManageUsers = () => {
   const { userToken, isAdmin } = useContext(AuthContext);
@@ -110,11 +111,13 @@ const ManageUsers = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <BackButton />
         <Text style={styles.title}>User Management</Text>
-        <Text style={styles.subtitle}>
-          {users.length} user{users.length !== 1 ? "s" : ""} found
-        </Text>
+        <View style={{ width: 24 }} />
       </View>
+      <Text style={styles.subtitle}>
+        {users.length} user{users.length !== 1 ? "s" : ""} found
+      </Text>
 
       <FlatList
         data={users}
@@ -166,29 +169,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffffffff",
-    paddingTop:10
   },
   centeredContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
+    padding: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "ios" ? 60 : 30,
-    paddingBottom: 10,
-    backgroundColor: "#ffffff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  titleContainer: {
+    ...StyleSheet.absoluteFillObject, // Fill entire parent
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#1e293b",
+    fontSize: 18,
+    fontWeight: "600",
   },
   subtitle: {
-    fontSize: 14,
-    color: "#64748b",
+    fontSize: 18,
+    color: "#000000",
     marginTop: 4,
+    textAlign: "center",
   },
   listContent: {
     paddingHorizontal: 16,
@@ -198,9 +208,9 @@ const styles = StyleSheet.create({
   userCard: {
     backgroundColor: "#ffffff",
     borderRadius: 1,
-    borderWidth:0.2,
+    borderWidth: 0.2,
     padding: 8,
-    paddingHorizontal:12,
+    paddingHorizontal: 12,
     marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",

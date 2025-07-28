@@ -37,7 +37,7 @@ export default function UserHome() {
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Text style={styles.title}>Fabricanna Supreme</Text>
-          <Text style={styles.subtitle}>Welcome, User</Text>{" "}
+          <Text style={styles.subtitle}>Welcome, User</Text>
         </View>
       </View>
 

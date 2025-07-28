@@ -1,38 +1,40 @@
 import React, { createContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { API_URL } from "../../constants/api";
 import { useRouter } from "expo-router";
-const router = useRouter();
+
 export const AuthContext = createContext(undefined);
 
 const AuthProvider = ({ children }) => {
+  const router = useRouter();
+  const [user, setUser] = useState(null); // 👈 NEW
   const [userToken, setUserToken] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
   const [userDepartments, setUserDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on app launch
   useEffect(() => {
-    const bootstrapAsync = async () => {
+    const restoreSession = async () => {
       try {
-        const token = await AsyncStorage.getItem("userToken");
-        const roles = await AsyncStorage.getItem("userRoles");
-        const departments = await AsyncStorage.getItem("userDepartments");
+        const token = await SecureStore.getItemAsync("userToken");
+        const roles = await SecureStore.getItemAsync("userRoles");
+        const departments = await SecureStore.getItemAsync("userDepartments");
+        const storedUser = await SecureStore.getItemAsync("user");
 
         setUserToken(token);
         setUserRoles(roles ? JSON.parse(roles) : []);
         setUserDepartments(departments ? JSON.parse(departments) : []);
-      } catch (e) {
-        console.error("❌ Failed to restore user session:", e);
+        setUser(storedUser ? JSON.parse(storedUser) : null); // 👈 Load full user
+      } catch (err) {
+        console.error("❌ Failed to restore session:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    bootstrapAsync();
+    restoreSession();
   }, []);
 
-  // Sign in
   const signIn = async ({ username, password }) => {
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -41,15 +43,8 @@ const AuthProvider = ({ children }) => {
         body: JSON.stringify({ username, password }),
       });
 
-      const contentType = response.headers.get("content-type");
-
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error("Server returned non-JSON response:", text);
-        throw new Error("Unexpected server response format");
-      }
-
       const data = await response.json();
+      console.log("🔐 Login response:", data);
 
       if (!response.ok || !data.token) {
         throw new Error(data.message || "Login failed");
@@ -58,16 +53,36 @@ const AuthProvider = ({ children }) => {
       const rolesArray = data.roles || (data.role ? [data.role] : []);
       const departmentsArray = data.departments || [];
 
-      await AsyncStorage.setItem("userToken", data.token);
-      await AsyncStorage.setItem("userRoles", JSON.stringify(rolesArray));
-      await AsyncStorage.setItem(
-        "userDepartments",
-        JSON.stringify(departmentsArray)
-      );
+      const userObject = {
+        username,
+        token: data.token,
+        roles: rolesArray,
+        departments: departmentsArray,
+      };
 
+      console.log("✅ Roles:", rolesArray);
+      console.log("✅ Departments:", departmentsArray);
+
+      // Store everything
+      await SecureStore.setItemAsync("userToken", data.token);
+      await SecureStore.setItemAsync("userRoles", JSON.stringify(rolesArray));
+      await SecureStore.setItemAsync("userDepartments", JSON.stringify(departmentsArray));
+      await SecureStore.setItemAsync("user", JSON.stringify(userObject)); // 👈 Store full user
+
+      // Set state
       setUserToken(data.token);
       setUserRoles(rolesArray);
       setUserDepartments(departmentsArray);
+      setUser(userObject); // 👈 Set full user
+
+      // Redirect
+      if (rolesArray.includes("admin")) {
+        router.replace("/admin");
+      } else if (rolesArray.includes("staff")) {
+        router.replace("/staff");
+      } else {
+        router.replace("/user");
+      }
 
       return rolesArray;
     } catch (err) {
@@ -78,24 +93,25 @@ const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      await AsyncStorage.multiRemove([
-        "userToken",
-        "userRoles",
-        "userDepartments",
-      ]);
+      await SecureStore.deleteItemAsync("userToken");
+      await SecureStore.deleteItemAsync("userRoles");
+      await SecureStore.deleteItemAsync("userDepartments");
+      await SecureStore.deleteItemAsync("user"); // 👈 clear stored user
     } catch (err) {
-      console.error("Logout error:", err);
+      console.error("❌ Logout error:", err);
     } finally {
       setUserToken(null);
       setUserRoles([]);
       setUserDepartments([]);
-      router.replace("/"); // 👈 or wherever your login screen is
+      setUser(null);
+      router.replace("/");
     }
   };
 
   return (
     <AuthContext.Provider
       value={{
+        user,
         userToken,
         userRoles,
         userDepartments,
