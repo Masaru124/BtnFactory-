@@ -66,7 +66,6 @@ function AdminCard({ icon, title, desc, href }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -95,8 +94,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fdfdfdff",
     borderColor: "#000000",
-    borderWidth: 0.19,
+    borderWidth: 0.3,
     padding: 16,
+    borderRadius: 10,
   },
   cardContent: {
     marginLeft: 12,
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: "#cf0000ff",
     marginBottom: 20,
+    borderRadius: 10,
   },
   logoutText: {
     color: "#c90000ff",

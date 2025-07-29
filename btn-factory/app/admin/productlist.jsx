@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 1,
-    borderWidth: 0.3,
+    borderRadius: 10,
+    borderWidth: 0.5,
     padding: 16,
     marginBottom: 12,
     ...Platform.select({

@@ -1,9 +1,9 @@
 import React, { useContext, useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { AuthContext } from "../contexts/AuthContext";
 import RawMaterialDepartment from "./RawMaterialDepartment";
 import CastingDepartment from "./CastingDepartment";
-
+import { API_URL } from "../../constants/api";
 const StaffScreen = () => {
   const authContext = useContext(AuthContext);
 
@@ -11,7 +11,7 @@ const StaffScreen = () => {
     throw new Error("AuthContext is null");
   }
 
-  const { signOut, user } = authContext;
+  const { user } = authContext;
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -25,10 +25,13 @@ const StaffScreen = () => {
   const handleRawMaterialSubmit = async (data) => {
     try {
       const response = await fetch(
-        `/api/staff/orders/raw-material/${data.token}`,
+        `${API_URL}/api/staff/orders/raw-material/${data.token}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authContext.userToken}`, // 🔐 optional, if backend requires it
+          },
           body: JSON.stringify({
             materialName: data.materialName,
             quantity: data.quantity,
@@ -36,9 +39,13 @@ const StaffScreen = () => {
           }),
         }
       );
+
       if (!response.ok) {
+        const errorText = await response.text(); // debug info
+        console.error("❌ API response error:", errorText);
         throw new Error("Failed to update raw material details");
       }
+
       setMessage("Raw material details updated successfully");
     } catch (error) {
       setMessage(error.message);
@@ -49,10 +56,13 @@ const StaffScreen = () => {
   const handleCastingSubmit = async (data) => {
     try {
       const response = await fetch(
-        `/api/staff/orders/casting-process/${data.token}`,
+        `${API_URL}/api/staff/orders/casting-process/${data.token}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authContext.userToken}`, // ✅ ADD THIS LINE
+          },
           body: JSON.stringify({
             rawMaterialsUsed: data.rawMaterialsUsed,
             sheetsMade: data.sheetsMade,

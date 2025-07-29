@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   },
   departments: {
     type: [String],
-    enum: ["Raw Material", " Casting", "Turning", "Polish", "Packing"],
+    enum: ["Raw Material", "Casting", "Turning", "Polish", "Packing"],
     default: ["pending"],
   },
 });

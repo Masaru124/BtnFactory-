@@ -240,11 +240,11 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 0.3,
     borderColor: "#000000ff",
-    borderRadius: 1,
     paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: "#ffffff",
     color: "#1e293b",
+    borderRadius: 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   pickerContainer: {
     borderColor: "#000000ff",
     borderWidth: 0.3,
-    borderRadius: 1,
+    borderRadius: 10,
     overflow: "hidden",
     backgroundColor: "#ffffff",
     ...Platform.select({
@@ -279,11 +279,12 @@ const styles = StyleSheet.create({
     height: 50,
     width: "100%",
     color: "#1e293b",
+    borderRadius: 10,
   },
   button: {
     backgroundColor: "#4678e5ff",
     paddingVertical: 16,
-    borderRadius: 3,
+    borderRadius: 10,
     alignItems: "center",
     marginTop: 20,
     ...Platform.select({

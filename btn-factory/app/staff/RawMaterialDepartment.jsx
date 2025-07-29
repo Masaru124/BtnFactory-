@@ -3,17 +3,20 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
 } from "react-native";
-import { API_URL } from "../../constants/api"; // Adjust the import path as needed
+import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 import { AuthContext } from "../contexts/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 
-const RawMaterialDepartment = ({ onSubmit, onLogout }) => {
+const RawMaterialDepartment = ({ onSubmit }) => {
   const authContext = useContext(AuthContext);
+  const { signOut } = authContext;
 
   const [token, setToken] = useState("");
   const [materialName, setMaterialName] = useState("");
@@ -21,39 +24,29 @@ const RawMaterialDepartment = ({ onSubmit, onLogout }) => {
   const [totalPrice, setTotalPrice] = useState("");
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { signOut } = authContext;
+  const [accordionVisible, setAccordionVisible] = useState(false);
 
   const fetchOrder = async () => {
-    if (!token) return Alert.alert("Enter a valid token");
+    if (!token) return Alert.alert("Error", "Please enter a valid token");
 
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/api/staff/orders/${token}`, {
         headers: {
-          Authorization: `Bearer ${authContext.token}`,
+          Authorization: `Bearer ${authContext.userToken}`,
           Accept: "application/json",
         },
       });
 
-      const text = await response.text();
-      console.log("📦 Raw response:", text);
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (error) {
-        console.log(error)
-        throw new Error("Invalid JSON response from server");
-      }
-
       if (!response.ok) {
-        throw new Error(data.message || "Order not found");
+        const errorText = await response.text();
+        throw new Error(errorText || "Order not found");
       }
 
+      const data = await response.json();
       setOrderDetails(data);
-      Alert.alert("Order found", `Order ID: ${data._id || token}`);
     } catch (error) {
-      console.error("❌ Error fetching order:", error.message);
+      console.error("Error fetching order:", error.message);
       Alert.alert("Error", error.message);
       setOrderDetails(null);
     } finally {
@@ -63,7 +56,7 @@ const RawMaterialDepartment = ({ onSubmit, onLogout }) => {
 
   const handleSubmit = async () => {
     if (!materialName || !quantity || !totalPrice) {
-      return Alert.alert("Fill all material fields");
+      return Alert.alert("Error", "Please fill all material fields");
     }
 
     try {
@@ -74,76 +67,154 @@ const RawMaterialDepartment = ({ onSubmit, onLogout }) => {
         totalPrice: Number(totalPrice),
       });
 
-      // Optionally clear input fields after submit
+      // Clear input fields after submit
       setMaterialName("");
       setQuantity("");
       setTotalPrice("");
+      Alert.alert("Success", "Material details updated successfully");
     } catch (error) {
-      console.error("❌ Submit error:", error);
+      console.error("Submit error:", error);
+      Alert.alert("Error", "Failed to update material details");
     }
+  };
+
+  const OrderDetail = ({ label, value }) => (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}:</Text>
+      <Text style={styles.detailValue}>{value || "—"}</Text>
+    </View>
+  );
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "—";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString();
   };
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <BackButton />
-        <Button title="Logout" onPress={signOut} />
+        <Text style={styles.headerTitle}>Raw Material Staff</Text>
+        <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color="#ef4444" />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.heading}>Raw Material Department</Text>
-        <Text style={styles.label}>Order ID / Token Number:</Text>
-        <TextInput
-          style={styles.input}
-          value={token}
-          onChangeText={setToken}
-          placeholder="Enter token"
-        />
-        <Button title="Fetch Order" onPress={fetchOrder} />
-        {loading && (
-          <ActivityIndicator
-            size="small"
-            color="blue"
-            style={{ marginVertical: 10 }}
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Search Section */}
+        <View style={styles.searchSection}>
+          <Text style={styles.sectionTitle}>Order Lookup</Text>
+          <TextInput
+            style={styles.input}
+            value={token}
+            onChangeText={setToken}
+            placeholder="Enter order token"
+            placeholderTextColor="#9ca3af"
           />
-        )}
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={fetchOrder}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.searchButtonText}>Search Order</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         {orderDetails && (
           <>
-            <Text style={styles.info}>
-              Order ID: {orderDetails._id || token}
-            </Text>
+            {/* Order Details Accordion */}
+            <TouchableOpacity
+              onPress={() => setAccordionVisible(!accordionVisible)}
+              style={styles.accordionHeader}
+            >
+              <Text style={styles.accordionTitle}>
+                {accordionVisible ? "Hide Order Details" : "Show Order Details"}
+              </Text>
+              <Ionicons
+                name={accordionVisible ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#4b5563"
+              />
+            </TouchableOpacity>
 
-            <Text style={styles.label}>Material Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={materialName}
-              onChangeText={setMaterialName}
-              placeholder="Enter material name"
-            />
+            {accordionVisible && (
+              <View style={styles.accordionContent}>
+                <Text style={styles.subsectionTitle}>Material Information</Text>
+                <OrderDetail
+                  label="Material"
+                  value={orderDetails.rawMaterial?.materialName}
+                />
+                <OrderDetail
+                  label="Quantity"
+                  value={orderDetails.rawMaterial?.quantity}
+                />
+                <OrderDetail
+                  label="Total Price"
+                  value={orderDetails.rawMaterial?.totalPrice}
+                />
+                <OrderDetail
+                  label="Last Updated"
+                  value={formatDate(orderDetails.rawMaterial?.updatedAt)}
+                />
+              </View>
+            )}
 
-            <Text style={styles.label}>Quantity:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={quantity}
-              onChangeText={setQuantity}
-              placeholder="Enter quantity"
-            />
+            {/* Update Form */}
+            <View style={styles.formSection}>
+              <Text style={styles.sectionTitle}>Update Material Details</Text>
 
-            <Text style={styles.label}>Total Price:</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={totalPrice}
-              onChangeText={setTotalPrice}
-              placeholder="Enter total price"
-            />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Material Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={materialName}
+                  onChangeText={setMaterialName}
+                  placeholder="Enter material name"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
 
-            <Button title="Submit Update" onPress={handleSubmit} />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Quantity</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  placeholder="Enter quantity"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Total Price (₹)</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={totalPrice}
+                  onChangeText={setTotalPrice}
+                  placeholder="Enter total price"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmit}
+                disabled={loading}
+              >
+                <Text style={styles.submitButtonText}>Update Details</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -151,50 +222,132 @@ const RawMaterialDepartment = ({ onSubmit, onLogout }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffffff",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 15,
-    paddingLeft: -15,
-    backgroundColor: "#ffffffff",
+    paddingHorizontal: 1,
+    paddingVertical: 20,
+    borderBottomColor: "#000000",
   },
-  heading: {
+  headerTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    flex: 1,
-    textAlign: "center",
-    marginHorizontal: 10,
+    fontWeight: "600",
+    color: "#111827",
   },
   logoutButton: {
-    padding: 5,
-  },
-  logoutText: {
-    color: "blue",
-    fontWeight: "500",
+    padding: 8,
   },
   content: {
-    padding: 15,
+    padding: 0,
+    paddingBottom: 32,
   },
-  label: {
-    marginTop: 10,
-    marginBottom: 4,
+  searchSection: {
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 16,
+  },
+  formSection: {
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: "600",
+    color: "#111827",
+    marginBottom: 16,
+  },
+  subsectionTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+    marginBottom: 12,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 8,
+    fontWeight: "500",
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#aaa",
+    backgroundColor: "#f3f4f6",
     borderRadius: 6,
-    padding: 8,
-    marginBottom: 10,
-  },
-  info: {
+    padding: 12,
     fontSize: 14,
-    fontStyle: "italic",
-    marginVertical: 10,
-    color: "#555",
+    color: "#111827",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  searchButton: {
+    backgroundColor: "#4f46e5",
+    borderRadius: 6,
+    padding: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  searchButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    margin: 10,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    marginBottom: 8,
+  },
+  accordionTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#4b5563",
+  },
+  accordionContent: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    padding: 10,
+    margin: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  detailLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  detailValue: {
+    fontSize: 13,
+    color: "#111827",
+    fontWeight: "500",
+  },
+  submitButton: {
+    backgroundColor: "#10b981",
+    borderRadius: 6,
+    padding: 14,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  submitButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });
 

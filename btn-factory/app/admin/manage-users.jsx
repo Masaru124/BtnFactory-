@@ -207,8 +207,8 @@ const styles = StyleSheet.create({
   },
   userCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 1,
-    borderWidth: 0.2,
+    borderRadius: 10,
+    borderWidth: 0.5,
     padding: 8,
     paddingHorizontal: 12,
     marginBottom: 12,

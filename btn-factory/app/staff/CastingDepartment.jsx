@@ -1,214 +1,378 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
-  ScrollView,
   Alert,
-} from 'react-native';
-import { AuthContext } from '../contexts/AuthContext';
-import { API_URL } from '../../constants/api';
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { API_URL } from "../../constants/api";
+import BackButton from "../../components/BackButton";
+import { AuthContext } from "../contexts/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
 
 const CastingDepartment = ({ onSubmit }) => {
-  const { token: authToken } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const { signOut, userToken } = authContext;
 
-  const [orderToken, setOrderToken] = useState('');
-  const [orderData, setOrderData] = useState(null);
-  const [rawMaterialsUsed, setRawMaterialsUsed] = useState('');
-  const [sheetsMade, setSheetsMade] = useState('');
-  const [sheetsWasted, setSheetsWasted] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [error, setError] = useState('');
+  const [token, setToken] = useState("");
+  const [rawMaterialsUsed, setRawMaterialsUsed] = useState("");
+  const [sheetsMade, setSheetsMade] = useState("");
+  const [sheetsWasted, setSheetsWasted] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [accordionVisible, setAccordionVisible] = useState(false);
 
-  const fetchOrderData = async (orderToken) => {
+  const fetchOrder = async () => {
+    if (!token) {
+      Alert.alert("Error", "Please enter a valid token");
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_URL}/api/orders/${orderToken}`, {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/staff/orders/${token}`, {
         headers: {
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${userToken}`,
+          Accept: "application/json",
         },
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        setError(text || 'Order not found');
-        setOrderData(null);
-        return;
+        const errorText = await response.text();
+        throw new Error(errorText || "Order not found");
       }
 
       const data = await response.json();
-      setOrderData(data);
-      setError('');
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('Error fetching order');
+      setOrderDetails(data);
+    } catch (error) {
+      console.error("Error fetching order:", error.message);
+      Alert.alert("Error", error.message);
+      setOrderDetails(null);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (orderToken.trim()) {
-      fetchOrderData(orderToken);
-    } else {
-      setOrderData(null);
-      setError('');
-    }
-  }, [orderToken]);
-
   const handleSubmit = async () => {
-    if (!authToken) {
-      setError('Not authenticated');
-      return;
-    }
-
     if (
-      !orderToken ||
       !rawMaterialsUsed ||
-      isNaN(sheetsMade) ||
-      isNaN(sheetsWasted) ||
+      !sheetsMade ||
+      !sheetsWasted ||
       !startTime ||
       !endTime
     ) {
-      Alert.alert('Validation Error', 'Please fill all fields correctly.');
+      Alert.alert("Error", "Please fill in all casting fields");
       return;
     }
 
-    const body = {
-      orderToken,
-      rawMaterialsUsed,
-      sheetsMade: Number(sheetsMade),
-      sheetsWasted: Number(sheetsWasted),
-      startTime,
-      endTime,
-    };
-
     try {
-      const res = await fetch(`${API_URL}/api/casting/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(body),
+      setLoading(true);
+      await onSubmit({
+        token,
+        rawMaterialsUsed,
+        sheetsMade: Number(sheetsMade),
+        sheetsWasted: Number(sheetsWasted),
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
       });
 
-      const result = await res.json();
+      // Reset form
+      setRawMaterialsUsed("");
+      setSheetsMade("");
+      setSheetsWasted("");
+      setStartTime("");
+      setEndTime("");
 
-      if (!res.ok) {
-        throw new Error(result.message || 'Failed to submit');
-      }
-
-      onSubmit?.(result);
-      Alert.alert('Success', 'Submitted successfully');
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', err.message);
+      Alert.alert("Success", "Casting process data updated");
+    } catch (error) {
+      console.error("Submit error:", error);
+      Alert.alert("Error", "Failed to update casting data");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const OrderDetail = ({ label, value }) => (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}:</Text>
+      <Text style={styles.detailValue}>{value || "—"}</Text>
+    </View>
+  );
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Casting Department</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <BackButton />
+        <Text style={styles.headerTitle}>Casting Department</Text>
+        <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color="#ef4444" />
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.label}>Order Token:</Text>
-      <TextInput
-        style={styles.input}
-        value={orderToken}
-        onChangeText={setOrderToken}
-        placeholder="Enter order token"
-      />
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      {orderData && (
-        <View style={styles.infoBox}>
-          <Text>🖼️ Image: {orderData.buttonImage || 'N/A'}</Text>
-          <Text>🧪 Casting Type: {orderData.casting}</Text>
-          <Text>📏 Number of Lines: {orderData.linings ?? 'N/A'}</Text>
-          <Text>🕳️ Number of Holes: {orderData.holes}</Text>
-          <Text>📦 Quantity: {orderData.quantity ?? 'N/A'}</Text>
-          <Text>🔩 Raw Materials: {orderData.rawMaterial?.materialName || 'N/A'}</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Search Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Order Lookup</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter order token"
+            placeholderTextColor="#9ca3af"
+            value={token}
+            onChangeText={setToken}
+          />
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={fetchOrder}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="search" size={18} color="#fff" />
+                <Text style={styles.searchButtonText}>Search Order</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
-      )}
 
-      <Text style={styles.label}>Raw Materials Used:</Text>
-      <TextInput
-        style={styles.input}
-        value={rawMaterialsUsed}
-        onChangeText={setRawMaterialsUsed}
-        placeholder="e.g., 10kg alloy"
-      />
+        {orderDetails && (
+          <>
+            {/* Order Details Card */}
+            <View style={styles.card}>
+              <TouchableOpacity
+                onPress={() => setAccordionVisible(!accordionVisible)}
+                style={styles.accordionHeader}
+              >
+                <Text style={styles.accordionTitle}>Order Details</Text>
+                <Ionicons
+                  name={accordionVisible ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#4b5563"
+                />
+              </TouchableOpacity>
 
-      <Text style={styles.label}>Sheets Made:</Text>
-      <TextInput
-        style={styles.input}
-        value={sheetsMade}
-        onChangeText={setSheetsMade}
-        keyboardType="numeric"
-        placeholder="Number"
-      />
+              {accordionVisible && (
+                <View style={styles.accordionContent}>
+                  <OrderDetail
+                    label="Company"
+                    value={orderDetails.companyName}
+                  />
+                  <OrderDetail
+                    label="Casting Type"
+                    value={orderDetails.casting}
+                  />
+                  <OrderDetail label="Box Type" value={orderDetails.boxType} />
+                  <OrderDetail label="Quantity" value={orderDetails.quantity} />
+                </View>
+              )}
+            </View>
 
-      <Text style={styles.label}>Sheets Wasted:</Text>
-      <TextInput
-        style={styles.input}
-        value={sheetsWasted}
-        onChangeText={setSheetsWasted}
-        keyboardType="numeric"
-        placeholder="Number"
-      />
+            {/* Casting Form Card */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Update Casting Process</Text>
 
-      <Text style={styles.label}>Start Time:</Text>
-      <TextInput
-        style={styles.input}
-        value={startTime}
-        onChangeText={setStartTime}
-        placeholder="HH:MM"
-      />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Raw Materials Used</Text>
+                <TextInput
+                  style={styles.input}
+                  value={rawMaterialsUsed}
+                  onChangeText={setRawMaterialsUsed}
+                  placeholder="e.g., 5kg copper alloy"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
 
-      <Text style={styles.label}>End Time:</Text>
-      <TextInput
-        style={styles.input}
-        value={endTime}
-        onChangeText={setEndTime}
-        placeholder="HH:MM"
-      />
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Sheets Produced</Text>
+                <TextInput
+                  style={styles.input}
+                  value={sheetsMade}
+                  onChangeText={setSheetsMade}
+                  keyboardType="numeric"
+                  placeholder="Number of sheets"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
 
-      <Button title="Submit" onPress={handleSubmit} />
-    </ScrollView>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Sheets Wasted</Text>
+                <TextInput
+                  style={styles.input}
+                  value={sheetsWasted}
+                  onChangeText={setSheetsWasted}
+                  keyboardType="numeric"
+                  placeholder="Number of sheets"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Start Time</Text>
+                <TextInput
+                  style={styles.input}
+                  value={startTime}
+                  onChangeText={setStartTime}
+                  placeholder="Format: YYYY-MM-DDTHH:MM"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>End Time</Text>
+                <TextInput
+                  style={styles.input}
+                  value={endTime}
+                  onChangeText={setEndTime}
+                  placeholder="Format: YYYY-MM-DDTHH:MM"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.submitButtonText}>
+                      Submit
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
-export default CastingDepartment;
-
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    backgroundColor: "#ffffffff",
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
   },
-  label: {
-    marginTop: 12,
-    fontWeight: '600',
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  logoutButton: {
+    padding: 8,
+  },
+  content: {
+    paddingBottom: 32,
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#475569",
+    marginBottom: 8,
+    fontWeight: "500",
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  error: {
-    color: 'red',
-    marginVertical: 8,
-  },
-  infoBox: {
-    backgroundColor: '#f1f1f1',
-    padding: 10,
+    backgroundColor: "#f1f5f9",
     borderRadius: 8,
-    marginVertical: 10,
+    padding: 14,
+    fontSize: 14,
+    color: "#334155",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  searchButton: {
+    backgroundColor: "#4f46e5",
+    borderRadius: 8,
+    padding: 14,
+    marginTop: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  searchButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  accordionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  accordionTitle: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#475569",
+  },
+  accordionContent: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: "#64748b",
+  },
+  detailValue: {
+    fontSize: 14,
+    color: "#1e293b",
+    fontWeight: "500",
+  },
+  submitButton: {
+    backgroundColor: "#10b981",
+    borderRadius: 8,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  submitButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 15,
   },
 });
+
+export default CastingDepartment;

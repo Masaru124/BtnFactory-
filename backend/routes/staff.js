@@ -105,12 +105,32 @@ router.put(
       await order.save();
       res.json({ message: "Casting process data updated" });
     } catch (err) {
-      res
-        .status(400)
-        .json({
-          message: "Error updating casting process data",
-          error: err.message,
-        });
+      res.status(400).json({
+        message: "Error updating casting process data",
+        error: err.message,
+      });
+    }
+  }
+);
+
+router.get(
+  "/orders/:token",
+  authenticateToken, // ✅ Ensure token is required
+  authorizeRoles(["staff", "admin"]), // ✅ Ensure only staff/admin can access
+  async (req, res) => {
+    try {
+      const order = await Order.findOne({ token: req.params.token });
+
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      res.json(order); // ✅ This must be valid JSON
+    } catch (err) {
+      res.status(500).json({
+        message: "Error fetching order",
+        error: err.message,
+      });
     }
   }
 );

@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: "#ffffff",
-    color: "#004eccff",
+    color: "#000000ff",
     fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
     elevation: 0,
   },
