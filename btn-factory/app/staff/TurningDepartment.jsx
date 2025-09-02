@@ -15,20 +15,19 @@ import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 // import { set } from "mongoose";
 
-const PolishDepartment = ({ onSubmit }) => {
+const TurningDepartment = ({ onSubmit }) => {
   const authContext = useContext(AuthContext);
   const { signOut, userToken } = authContext;
 
   const [token, setToken] = useState("");
-//   const [rawMaterialsUsed, setRawMaterialsUsed] = useState("");
   const [Totalsheets, setTotalSheets] = useState("");
-//   const [sheetsWasted, setSheetsWasted] = useState("");
-  const [PolishDate, setPolishDate] = useState("");
-  const [ ReceivedDate, setReceivedDate] = useState("");
+  const [TurningDate, setTurningDate] = useState("");
+  const [ReceivedDate, setReceivedDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [GrossWeight, setGrossWeight] = useState("");   //  Added
   const [WtinKg, setWtinKg] = useState("");             //  Added
+  const [FinishThickness, setFinishThickness] = useState("");             //  Added
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [accordionVisible, setAccordionVisible] = useState(false);
@@ -67,15 +66,15 @@ const PolishDepartment = ({ onSubmit }) => {
   const handleSubmit = async () => {
     if (
       !Totalsheets ||
-    //   !sheetsWasted ||
-      !PolishDate ||
+      !TurningDate ||
       !ReceivedDate ||
       !startTime ||
       !endTime ||
       !GrossWeight || 
-      !WtinKg 
+      !WtinKg ||
+      !FinishThickness 
     ) {
-      Alert.alert("Error", "Please fill in all casting fields");
+      Alert.alert("Error", "Please fill in all Turning fields");
       return;
     }
 
@@ -83,9 +82,8 @@ const PolishDepartment = ({ onSubmit }) => {
       setLoading(true);
       await onSubmit({
         token,
-        // rawMaterialsUsed,
         Totalsheets: Number(Totalsheets),
-        PolishDate: new Date(PolishDate),
+        TurningDate: new Date(TurningDate),
         ReceivedDate: new Date(ReceivedDate),
         startTime: new Date(startTime),
         endTime: new Date(endTime),
@@ -94,19 +92,19 @@ const PolishDepartment = ({ onSubmit }) => {
       });
 
       // Reset form
-    //   setRawMaterialsUsed("");
       setTotalSheets("");
-      setPolishDate("");
+      setTurningDate("");
       setReceivedDate("");
       setStartTime("");
       setEndTime("");
       setGrossWeight("");
       setWtinKg("");
+      setFinishThickness("");
 
-      Alert.alert("Success", "Polish process data updated");
+      Alert.alert("Success", "Turning process data updated");
     } catch (error) {
       console.error("Submit error:", error);
-      Alert.alert("Error", "Failed to update casting data");
+      Alert.alert("Error", "Failed to update Turning data");
     } finally {
       setLoading(false);
     }
@@ -124,7 +122,7 @@ const PolishDepartment = ({ onSubmit }) => {
       {/* Header */}
       <View style={styles.header}>
         <BackButton />
-        <Text style={styles.headerTitle}>Polish Department</Text>
+        <Text style={styles.headerTitle}>Turning Department</Text>
         <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={24} color="#ef4444" />
         </TouchableOpacity>
@@ -179,19 +177,15 @@ const PolishDepartment = ({ onSubmit }) => {
                     label="Company"
                     value={orderDetails.companyName}
                   />
-                  <OrderDetail
-                    label="Polish Type"
-                    value={orderDetails.polishType}
-                  />
-                  <OrderDetail label="Laser" value={orderDetails.laser} />
+                  {/* <OrderDetail label="Laser" value={orderDetails.laser} /> */}
                   <OrderDetail label="Quantity" value={orderDetails.quantity} />
                 </View>
               )}
             </View>
 
-            {/* Casting Form Card */}
+            {/* Turning Form Card */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Update Polish Process</Text>
+              <Text style={styles.cardTitle}>Update Turning Process</Text>
 
 
               {/* <View style={styles.inputGroup}>
@@ -219,19 +213,19 @@ const PolishDepartment = ({ onSubmit }) => {
               </View> */}
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Polish Date</Text>
+                <Text style={styles.inputLabel}>Turning Date</Text>
                 <TextInput
                   style={styles.input}
-                  value={PolishDate}
-                  onChangeText={setPolishDate}
+                  value={TurningDate}
+                  onChangeText={setTurningDate}
                   keyboardType="numeric"
-                  placeholder="Number of sheets"
-                  placeholderTextColor="#9ca3af"
+                //   placeholder=""
+                //   placeholderTextColor="#9ca3af"
                 />
               </View> 
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Receving Date from Casting/Turning</Text>
+                <Text style={styles.inputLabel}>Receving Date for Turning</Text>
                 <TextInput
                   style={styles.input}
                   value={ReceivedDate}
@@ -271,11 +265,11 @@ const PolishDepartment = ({ onSubmit }) => {
                   value={GrossWeight}
                   onChangeText={setGrossWeight}
                   keyboardType="numeric"
-                  placeholder="Gross Weight in Gram"
+                  placeholder="Weight in Kgs"
                   placeholderTextColor="#9ca3af"
                 />
               </View> 
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Wt.in Kgs</Text>
                 <TextInput
@@ -287,6 +281,18 @@ const PolishDepartment = ({ onSubmit }) => {
                   placeholderTextColor="#9ca3af"
                 />
               </View> 
+
+                <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Finish Thickness</Text>
+                <TextInput
+                  style={styles.input}
+                  value={FinishThickness}
+                    onChangeText={setFinishThickness}
+                    keyboardType="numeric"
+                    placeholder="Finish Thickness"
+                    placeholderTextColor="#9ca3af"
+                />
+              </View>
 
               <TouchableOpacity
                 style={styles.submitButton}
@@ -427,4 +433,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PolishDepartment;
+export default TurningDepartment;
