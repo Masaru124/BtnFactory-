@@ -123,8 +123,10 @@ export default function OrderDetailsScreen() {
             color: statusColors[orderData.status.toLowerCase()] || "#1E293B",
           }}
         />
+          <DetailRow label="PO Image" value={orderData.poImage} />
 
         <SectionTitle title="Product Details" />
+        <DetailRow label="Button Image" value={orderData.buttonImage} />
         <DetailRow label="Casting" value={orderData.casting} />
         <DetailRow label="Thickness" value={orderData.thickness} />
         <DetailRow label="Holes" value={orderData.holes} />

@@ -14,14 +14,14 @@ import BackButton from "../../components/BackButton";
 import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 
-const CastingDepartment = ({ onSubmit }) => {
+const PolishDepartment = ({ onSubmit }) => {
   const authContext = useContext(AuthContext);
   const { signOut, userToken } = authContext;
 
   const [token, setToken] = useState("");
-  const [rawMaterialsUsed, setRawMaterialsUsed] = useState("");
-  const [sheetsMade, setSheetsMade] = useState("");
-  const [sheetsWasted, setSheetsWasted] = useState("");
+//   const [rawMaterialsUsed, setRawMaterialsUsed] = useState("");
+  const [Totalsheets, setTotalSheets] = useState("");
+//   const [sheetsWasted, setSheetsWasted] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [orderDetails, setOrderDetails] = useState(null);
@@ -61,9 +61,9 @@ const CastingDepartment = ({ onSubmit }) => {
 
   const handleSubmit = async () => {
     if (
-      !rawMaterialsUsed ||
-      !sheetsMade ||
-      !sheetsWasted ||
+    //   !rawMaterialsUsed ||
+      !Totalsheets ||
+    //   !sheetsWasted ||
       !startTime ||
       !endTime
     ) {
@@ -75,17 +75,17 @@ const CastingDepartment = ({ onSubmit }) => {
       setLoading(true);
       await onSubmit({
         token,
-        rawMaterialsUsed,
-        sheetsMade: Number(sheetsMade),
-        sheetsWasted: Number(sheetsWasted),
+        // rawMaterialsUsed,
+        Totalsheets: Number(Totalsheets),
+        // sheetsWasted: Number(sheetsWasted),
         startTime: new Date(startTime),
         endTime: new Date(endTime),
       });
 
       // Reset form
-      setRawMaterialsUsed("");
-      setSheetsMade("");
-      setSheetsWasted("");
+    //   setRawMaterialsUsed("");
+      setTotalSheets("");
+    //   setSheetsWasted("");
       setStartTime("");
       setEndTime("");
 
@@ -166,34 +166,21 @@ const CastingDepartment = ({ onSubmit }) => {
                     value={orderDetails.companyName}
                   />
                   <OrderDetail
-                    label="Casting Type"
-                    value={orderDetails.casting}
+                    label="Polish Type"
+                    value={orderDetails.polishType}
                   />
-                  <OrderDetail label="Box Type" value={orderDetails.boxType} />
-                  <OrderDetail label="Thickness" value={orderDetails.thickness} />
-                  <OrderDetail label="Holes" value={orderDetails.holes} />
+                  <OrderDetail label="Laser" value={orderDetails.laser} />
                   <OrderDetail label="Quantity" value={orderDetails.quantity} />
-                  <OrderDetail label="Button Image" value={orderDetails.buttonImage} />
                 </View>
               )}
             </View>
 
             {/* Casting Form Card */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Update Casting Process</Text>
+              <Text style={styles.cardTitle}>Update Polish Process</Text>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Raw Materials Used</Text>
-                <TextInput
-                  style={styles.input}
-                  value={rawMaterialsUsed}
-                  onChangeText={setRawMaterialsUsed}
-                  placeholder="e.g., 5kg copper alloy"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
 
-              <View style={styles.inputGroup}>
+              {/* <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Sheets Produced</Text>
                 <TextInput
                   style={styles.input}
@@ -203,19 +190,19 @@ const CastingDepartment = ({ onSubmit }) => {
                   placeholder="Number of sheets"
                   placeholderTextColor="#9ca3af"
                 />
-              </View>
+              </View> */}
 
-              <View style={styles.inputGroup}>
+              {/* <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Sheets Wasted</Text>
                 <TextInput
                   style={styles.input}
-                  value={sheetsWasted}
-                  onChangeText={setSheetsWasted}
+                //   value={sheetsWasted}
+                //   onChangeText={setSheetsWasted}
                   keyboardType="numeric"
                   placeholder="Number of sheets"
                   placeholderTextColor="#9ca3af"
                 />
-              </View>
+              </View> */}
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Start Time</Text>
@@ -378,4 +365,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CastingDepartment;
+export default PolishDepartment;

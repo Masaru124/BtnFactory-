@@ -1,5 +1,5 @@
 // imports
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, ImagePicker } from "react";
 import {
   View,
   Text,
@@ -11,8 +11,11 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+// import * as ImagePicker from "expo-image-picker";
+// import * as DocumentPicker from "expo-document-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AuthContext } from "../contexts/AuthContext";
 import { API_URL } from "../../constants/api";
@@ -61,6 +64,29 @@ export default function CreateOrderScreen() {
     if (selectedDate) {
       handleChange("dispatchDate", selectedDate);
     }
+  };
+
+  const pickImage = async (field) => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission required", "Camera roll permission is required to pick images.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: [ImagePicker.MediaType.Images],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+if (!result.canceled && result.assets?.length > 0) {
+  const asset = result.assets[0];
+  handleChange(field, {
+    uri: asset.uri,
+    name: asset.fileName || `${field}.jpg`,
+    type: asset.type || "image/jpeg",
+  });
+}
   };
 
   const handleSubmit = async () => {
@@ -220,6 +246,18 @@ export default function CreateOrderScreen() {
         </View>
       </View>
 
+      {/* File Upload Section */}
+      <View style={styles.uploadContainer}>
+       <Text style={styles.label}>Upload PO Image</Text>
+       <TouchableOpacity
+       style={styles.uploadButton}
+       onPress={() => pickImage("poImage")}>
+       <Feather name="upload" size={18} color="#fff" style={styles.uploadButtonLeft} />
+       <Text style={styles.uploadButtonText}>Choose File</Text>
+      </TouchableOpacity>
+      {formData.poImage?.uri && <Text style={styles.fileName}>{formData.poImage.name}</Text>}
+     </View>
+
       {/* Product Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Product Details</Text>
@@ -325,6 +363,20 @@ export default function CreateOrderScreen() {
           prefix="₹"
         />
 
+        {/* Button Image Upload */}
+
+        <View style={styles.uploadContainer}>
+          <Text style={styles.label}>Upload Button Image</Text>
+          <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => pickImage("buttonImage")}
+          >
+          <Feather name="upload" size={18} color="#fff" style={styles.uploadButtonLeft} />
+          <Text style={styles.uploadButtonText}>Choose File</Text>
+          </TouchableOpacity>
+          {formData.buttonImage?.uri && <Text style={styles.fileName}>{formData.buttonImage.name}</Text>}
+          </View>
+          
         {/* Dispatch Date */}
         <View>
           <Text style={styles.label}>Dispatch Date</Text>
