@@ -177,7 +177,6 @@ const TurningDepartment = ({ onSubmit }) => {
                     label="Company"
                     value={orderDetails.companyName}
                   />
-                  {/* <OrderDetail label="Laser" value={orderDetails.laser} /> */}
                   <OrderDetail label="Quantity" value={orderDetails.quantity} />
                 </View>
               )}
@@ -188,39 +187,14 @@ const TurningDepartment = ({ onSubmit }) => {
               <Text style={styles.cardTitle}>Update Turning Process</Text>
 
 
-              {/* <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Sheets Produced</Text>
-                <TextInput
-                  style={styles.input}
-                  value={sheetsMade}
-                  onChangeText={setSheetsMade}
-                  keyboardType="numeric"
-                  placeholder="Number of sheets"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View> */}
-
-              {/* <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Sheets Wasted</Text>
-                <TextInput
-                  style={styles.input}
-                //   value={sheetsWasted}
-                //   onChangeText={setSheetsWasted}
-                  keyboardType="numeric"
-                  placeholder="Number of sheets"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View> */}
-
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Turning Date</Text>
                 <TextInput
                   style={styles.input}
                   value={TurningDate}
                   onChangeText={setTurningDate}
-                  keyboardType="numeric"
-                //   placeholder=""
-                //   placeholderTextColor="#9ca3af"
+                  placeholder="Format: YYYY-MM-DDTHH:MM"
+                 placeholderTextColor="#9ca3af"
                 />
               </View> 
 
@@ -230,8 +204,7 @@ const TurningDepartment = ({ onSubmit }) => {
                   style={styles.input}
                   value={ReceivedDate}
                   onChangeText={setReceivedDate}
-                  keyboardType="numeric"
-                  placeholder="Number of sheets"
+                  placeholder="Format: YYYY-MM-DDTHH:MM"
                   placeholderTextColor="#9ca3af"
                 />
               </View> 

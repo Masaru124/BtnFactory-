@@ -15,18 +15,16 @@ import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 // import { set } from "mongoose";
 
-const PolishDepartment = ({ onSubmit }) => {
+const PackingDepartment = ({ onSubmit }) => {
   const authContext = useContext(AuthContext);
   const { signOut, userToken } = authContext;
 
   const [token, setToken] = useState("");
-  const [Totalsheets, setTotalSheets] = useState("");
-  const [PolishDate, setPolishDate] = useState("");
+  const [PackingDate, setTurningDate] = useState("");
   const [ReceivedDate, setReceivedDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
   const [GrossWeight, setGrossWeight] = useState("");   //  Added
   const [WtinKg, setWtinKg] = useState("");             //  Added
+  const [FinishType, setFinishType] = useState("");             //  Added
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [accordionVisible, setAccordionVisible] = useState(false);
@@ -64,15 +62,13 @@ const PolishDepartment = ({ onSubmit }) => {
 
   const handleSubmit = async () => {
     if (
-      !Totalsheets ||
-      !PolishDate ||
+      !PackingDate ||
       !ReceivedDate ||
-      !startTime ||
-      !endTime ||
       !GrossWeight || 
-      !WtinKg 
+      !WtinKg ||
+      !FinishType 
     ) {
-      Alert.alert("Error", "Please fill in all casting fields");
+      Alert.alert("Error", "Please fill in all Packing fields");
       return;
     }
 
@@ -80,28 +76,24 @@ const PolishDepartment = ({ onSubmit }) => {
       setLoading(true);
       await onSubmit({
         token,
-        Totalsheets: Number(Totalsheets),
-        PolishDate: new Date(PolishDate),
+        PackingDate: new Date(PackingDate),
         ReceivedDate: new Date(ReceivedDate),
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
         GrossWeight: Number(GrossWeight),
         WtinKg: Number(WtinKg),
+        FinishType : Number(FinishType),
       });
 
       // Reset form
-      setTotalSheets("");
-      setPolishDate("");
+      setTurningDate("");
       setReceivedDate("");
-      setStartTime("");
-      setEndTime("");
       setGrossWeight("");
       setWtinKg("");
+      setFinishType("");
 
-      Alert.alert("Success", "Polish process data updated");
+      Alert.alert("Success", "Packing process data updated");
     } catch (error) {
       console.error("Submit error:", error);
-      Alert.alert("Error", "Failed to update casting data");
+      Alert.alert("Error", "Failed to update Packing data");
     } finally {
       setLoading(false);
     }
@@ -119,7 +111,7 @@ const PolishDepartment = ({ onSubmit }) => {
       {/* Header */}
       <View style={styles.header}>
         <BackButton />
-        <Text style={styles.headerTitle}>Polish Department</Text>
+        <Text style={styles.headerTitle}>Packing Department</Text>
         <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={24} color="#ef4444" />
         </TouchableOpacity>
@@ -174,33 +166,29 @@ const PolishDepartment = ({ onSubmit }) => {
                     label="Company"
                     value={orderDetails.companyName}
                   />
-                  <OrderDetail
-                    label="Polish Type"
-                    value={orderDetails.polishType}
-                  />
-                  <OrderDetail label="Laser" value={orderDetails.laser} />
                   <OrderDetail label="Quantity" value={orderDetails.quantity} />
                 </View>
               )}
             </View>
 
-            {/* Casting Form Card */}
+            {/* Packing Form Card */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Update Polish Process</Text>
+              <Text style={styles.cardTitle}>Update Packing Process</Text>
+
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Polish Date</Text>
+                <Text style={styles.inputLabel}>Packing Date</Text>
                 <TextInput
                   style={styles.input}
-                  value={PolishDate}
-                  onChangeText={setPolishDate}
+                  value={PackingDate}
+                  onChangeText={setTurningDate}
                   placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
+                 placeholderTextColor="#9ca3af"
                 />
               </View> 
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Receving Date from Laser/Turning</Text>
+                <Text style={styles.inputLabel}>Receving Date for Packing</Text>
                 <TextInput
                   style={styles.input}
                   value={ReceivedDate}
@@ -211,39 +199,17 @@ const PolishDepartment = ({ onSubmit }) => {
               </View> 
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Start Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>End Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>1 Gross weight in Gram</Text>
                 <TextInput
                   style={styles.input}
                   value={GrossWeight}
                   onChangeText={setGrossWeight}
                   keyboardType="numeric"
-                  placeholder="Gross Weight in Gram"
+                  placeholder="Weight in Kgs"
                   placeholderTextColor="#9ca3af"
                 />
               </View> 
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Wt.in Kgs</Text>
                 <TextInput
@@ -255,6 +221,18 @@ const PolishDepartment = ({ onSubmit }) => {
                   placeholderTextColor="#9ca3af"
                 />
               </View> 
+
+                <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Finishing Type</Text>
+                <TextInput
+                  style={styles.input}
+                  value={FinishType}
+                    onChangeText={setFinishType}
+                    keyboardType="numeric"
+                    placeholder="Finishing Type"
+                    placeholderTextColor="#9ca3af"
+                />
+              </View>
 
               <TouchableOpacity
                 style={styles.submitButton}
@@ -395,4 +373,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PolishDepartment;
+export default PackingDepartment;

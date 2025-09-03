@@ -136,3 +136,65 @@ router.get(
 );
 
 module.exports = router;
+
+//Polish route to update polish process data for an order
+// router.put(
+//   "/orders/polish-process/:token",
+//   authorizeRoles(["staff"]),
+//   async (req, res) => {
+//     const { token } = req.params;
+//     const { totalSheets, polishDate,receivedDate, startTime, endTime,GrossWeight,WtinKg } = req.body;
+//     try {
+//       const order = await Order.findOne({ token });
+//       if (!order) return res.status(404).json({ message: "Order not found" });
+//       order.polishProcess = {
+//         totalSheets,
+//         polishDate,
+//         receivedDate,
+//         startTime,
+//         endTime,
+//         GrossWeight,
+//         WtinKg
+//       };
+//       await order.save();
+//       res.json({ message: "Polish process data updated" });
+//     } catch (err) {
+//       res.status(400).json({
+//         message: "Error updating polish process data",
+//         error: err.message,
+//       });
+//     }
+//   }
+// );
+
+
+//Turning route to update turning process data for an order
+// router.put(
+//   "/orders/turning-process/:token",
+//   authorizeRoles(["staff"]),
+//   async (req, res) => {
+//     const { token } = req.params;
+//     const { totalSheets, turningDate, receivedDate, startTime, endTime,GrossWeight,WtinKg, FinishThickness } = req.body;
+//     try {
+//       const order = await Order.findOne({ token });
+//       if (!order) return res.status(404).json({ message: "Order not found" });
+//       order.turningProcess = {
+//         totalSheets,
+//         turningDate,
+//         receivedDate,
+//         startTime,
+//         endTime,
+//         GrossWeight,
+//         WtinKg,
+//         FinishThickness
+//       };
+//       await order.save();
+//       res.json({ message: "Turning process data updated" });
+//     } catch (err) {
+//       res.status(400).json({
+//         message: "Error updating turning process data",
+//         error: err.message,
+//       });
+//     }
+//   }
+// );

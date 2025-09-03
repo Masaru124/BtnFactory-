@@ -20,6 +20,9 @@ const RawMaterialDepartment = ({ onSubmit }) => {
 
   const [token, setToken] = useState("");
   const [materialName, setMaterialName] = useState("");
+  const [materials, setMaterials] = useState([
+    { materialName: "", quantity: "", totalPrice: "" },
+  ]);
   const [quantity, setQuantity] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
   const [orderDetails, setOrderDetails] = useState(null);
@@ -54,17 +57,41 @@ const RawMaterialDepartment = ({ onSubmit }) => {
     }
   };
 
+// Add new material row
+  const addMaterial = () => {
+    setMaterials([
+      ...materials,
+      { materialName: "", quantity: "", totalPrice: "" },
+    ]);
+  };
+
+  // Update a material field
+  const handleMaterialChange = (index, field, value) => {
+    const updated = [...materials];
+    updated[index][field] = value;
+    setMaterials(updated);
+  };
+
+  // Submit handler
   const handleSubmit = async () => {
-    if (!materialName || !quantity || !totalPrice) {
-      return Alert.alert("Error", "Please fill all material fields");
+    if (
+      materials.some(
+        (m) => !m.materialName.trim() || !m.quantity.trim() || !m.totalPrice.trim()
+      )
+    ) {
+      Alert.alert("Validation Error", "Please fill all fields before submitting.");
+      return;
     }
 
+      setLoading(true);
     try {
       await onSubmit({
         token,
-        materialName,
-        quantity: Number(quantity),
-        totalPrice: Number(totalPrice),
+        materials: materials.map((m) => ({
+          materialName: m.materialName,
+          quantity: Number(m.quantity),
+          totalPrice: Number(m.totalPrice),
+        })),
       });
 
       // Clear input fields after submit
@@ -169,40 +196,51 @@ const RawMaterialDepartment = ({ onSubmit }) => {
             <View style={styles.formSection}>
               <Text style={styles.sectionTitle}>Update Material Details</Text>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Material Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={materialName}
-                  onChangeText={setMaterialName}
-                  placeholder="Enter material name"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
+        {materials.map((mat, index) => (
+          <View key={index} style={styles.materialBlock}>
+            <Text style={styles.inputLabel}>Material Name</Text>
+            <TextInput
+              style={styles.input}
+              value={mat.materialName}
+              onChangeText={(val) =>
+                handleMaterialChange(index, "materialName", val)
+              }
+              placeholder="Enter material name"
+              placeholderTextColor="#9ca3af"
+            />
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Quantity</Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  placeholder="Enter quantity"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
+            <Text style={styles.inputLabel}>Quantity</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={mat.quantity}
+              onChangeText={(val) => handleMaterialChange(index, "quantity", val)}
+              placeholder="Enter quantity"
+              placeholderTextColor="#9ca3af"
+            />
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Total Price (₹)</Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={totalPrice}
-                  onChangeText={setTotalPrice}
-                  placeholder="Enter total price"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
+
+            <Text style={styles.inputLabel}>Total Price (₹)</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={mat.totalPrice}
+              onChangeText={(val) =>
+                handleMaterialChange(index, "totalPrice", val)
+              }
+              placeholder="Enter total price"
+              placeholderTextColor="#9ca3af"
+            />
+          </View>
+        ))}
+
+              {/* Add Material Button */}
+        <TouchableOpacity
+          style={[styles.submitButton, { backgroundColor: "#3b82f6" }]}
+          onPress={addMaterial}
+        >
+          <Text style={styles.submitButtonText}>+ Add Material</Text>
+        </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.submitButton}
@@ -337,6 +375,14 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontWeight: "500",
   },
+  materialBlock: {
+  marginBottom: 20,
+  padding: 10,
+  borderWidth: 1,
+  borderColor: "#e5e7eb",
+  borderRadius: 8,
+  backgroundColor: "#f9fafb",
+},
   submitButton: {
     backgroundColor: "#10b981",
     borderRadius: 6,
