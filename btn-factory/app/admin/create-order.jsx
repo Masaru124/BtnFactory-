@@ -67,9 +67,13 @@ export default function CreateOrderScreen() {
   };
 
   const pickImage = async (field) => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert("Permission required", "Camera roll permission is required to pick images.");
+      Alert.alert(
+        "Permission required",
+        "Camera roll permission is required to pick images."
+      );
       return;
     }
 
@@ -79,14 +83,14 @@ export default function CreateOrderScreen() {
       quality: 1,
     });
 
-if (!result.canceled && result.assets?.length > 0) {
-  const asset = result.assets[0];
-  handleChange(field, {
-    uri: asset.uri,
-    name: asset.fileName || `${field}.jpg`,
-    type: asset.type || "image/jpeg",
-  });
-}
+    if (!result.canceled && result.assets?.length > 0) {
+      const asset = result.assets[0];
+      handleChange(field, {
+        uri: asset.uri,
+        name: asset.fileName || `${field}.jpg`,
+        type: asset.type || "image/jpeg",
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -95,21 +99,28 @@ if (!result.canceled && result.assets?.length > 0) {
       poNumber,
       poDate,
       casting,
+      otherCasting,
       thickness,
       holes,
       boxType,
       rate,
+      quantity,
+      packingOption,
     } = formData;
 
+    // ✅ Validate required fields
     if (
-      !companyName ||
-      !poNumber ||
+      !companyName?.trim() ||
+      !poNumber?.trim() ||
       !poDate ||
-      !casting ||
-      !thickness ||
-      !holes ||
-      !boxType ||
-      !rate
+      !casting?.trim() ||
+      (casting === "Other" && !otherCasting?.trim()) ||
+      !thickness?.trim() ||
+      !holes?.trim() ||
+      !boxType?.trim() ||
+      !rate?.trim() ||
+      !quantity?.trim() ||
+      !packingOption?.trim()
     ) {
       Alert.alert("Required Fields", "Please fill all required fields");
       return;
@@ -120,24 +131,34 @@ if (!result.canceled && result.assets?.length > 0) {
       const data = new FormData();
 
       Object.entries(formData).forEach(([key, value]) => {
-        if (!value || key === "otherCasting") return;
+        if (!value) return;
 
+        // ✅ Handle dates (convert to YYYY-MM-DD)
         if (key === "poDate" || key === "dispatchDate") {
-          data.append(key, value.toISOString().split("T")[0]);
-        } else if ((key === "poImage" || key === "buttonImage") && value?.uri) {
+          data.append(key, new Date(value).toISOString().split("T")[0]);
+        }
+
+        // ✅ Handle images
+        else if ((key === "poImage" || key === "buttonImage") && value?.uri) {
           data.append(key, {
             uri: value.uri,
-            name: value.name,
-            type: value.type || "application/octet-stream",
+            name: value.name || `${key}.jpg`,
+            type: value.type || "image/jpeg",
           });
-        } else if (key === "casting" && value === "Other") {
-          data.append(key, formData.otherCasting);
-        } else {
+        }
+
+        // ✅ Handle casting type
+        else if (key === "casting" && value === "Other") {
+          data.append("casting", formData.otherCasting?.trim() || "Other");
+        }
+
+        // ✅ Normal fields
+        else {
           data.append(key, value);
         }
       });
 
-      // ✅ Log FormData content (for debugging)
+      // 🔍 Debug log
       for (let pair of data.entries()) {
         console.log(pair[0], pair[1]);
       }
@@ -145,20 +166,20 @@ if (!result.canceled && result.assets?.length > 0) {
       const response = await fetch(`${API_URL}/api/admin/orders`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${userToken}`, // ✅ Don't set 'Content-Type' manually
+          Authorization: `Bearer ${userToken}`,
         },
         body: data,
       });
 
-      if (response.ok) {
-        const responseData = await response.json();
-        setCreatedToken(responseData.token);
-        resetForm();
-      } else {
+      if (!response.ok) {
         const errorText = await response.text();
         console.error("Server response:", errorText);
-        throw new Error("Failed to create order. Server returned error.");
+        throw new Error(errorText || "Failed to create order.");
       }
+
+      const responseData = await response.json();
+      setCreatedToken(responseData.token);
+      resetForm();
     } catch (error) {
       console.error("Create order error:", error);
       Alert.alert("Error", error.message || "An unexpected error occurred");
@@ -196,8 +217,8 @@ if (!result.canceled && result.assets?.length > 0) {
     >
       <View style={styles.headerContainer}>
         <BackButton />
-        <Text style={styles.header}>Create New Order</Text> 
-        <View style={{ width: 24 }} /> 
+        <Text style={styles.header}>Create New Order</Text>
+        <View style={{ width: 24 }} />
       </View>
       {createdToken && (
         <View style={styles.tokenContainer}>
@@ -248,15 +269,23 @@ if (!result.canceled && result.assets?.length > 0) {
 
       {/* File Upload Section */}
       <View style={styles.uploadContainer}>
-       <Text style={styles.label}>Upload PO Image</Text>
-       <TouchableOpacity
-       style={styles.uploadButton}
-       onPress={() => pickImage("poImage")}>
-       <Feather name="upload" size={18} color="#fff" style={styles.uploadButtonLeft} />
-       <Text style={styles.uploadButtonText}>Choose File</Text>
-      </TouchableOpacity>
-      {formData.poImage?.uri && <Text style={styles.fileName}>{formData.poImage.name}</Text>}
-     </View>
+        <Text style={styles.label}>Upload PO Image</Text>
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => pickImage("poImage")}
+        >
+          <Feather
+            name="upload"
+            size={18}
+            color="#fff"
+            style={styles.uploadButtonLeft}
+          />
+          <Text style={styles.uploadButtonText}>Choose File</Text>
+        </TouchableOpacity>
+        {formData.poImage?.uri && (
+          <Text style={styles.fileName}>{formData.poImage.name}</Text>
+        )}
+      </View>
 
       {/* Product Details Section */}
       <View style={styles.section}>
@@ -351,8 +380,17 @@ if (!result.canceled && result.assets?.length > 0) {
           >
             <Picker.Item label="DD" value="DD" />
             <Picker.Item label="SD" value="SD" />
+            <Picker.Item label="ODS" value="ODS" />
           </Picker>
         </View>
+
+        <FormField
+          label="Tool Number"
+          value={formData.toolType}
+          onChangeText={(text) => handleChange("toolNumber", text)}
+          placeholder="Enter Tool Number"
+          keyboardType="decimal-pad"
+        />
 
         <FormField
           label="Rate (₹) *"
@@ -368,15 +406,22 @@ if (!result.canceled && result.assets?.length > 0) {
         <View style={styles.uploadContainer}>
           <Text style={styles.label}>Upload Button Image</Text>
           <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => pickImage("buttonImage")}
+            style={styles.uploadButton}
+            onPress={() => pickImage("buttonImage")}
           >
-          <Feather name="upload" size={18} color="#fff" style={styles.uploadButtonLeft} />
-          <Text style={styles.uploadButtonText}>Choose File</Text>
+            <Feather
+              name="upload"
+              size={18}
+              color="#fff"
+              style={styles.uploadButtonLeft}
+            />
+            <Text style={styles.uploadButtonText}>Choose File</Text>
           </TouchableOpacity>
-          {formData.buttonImage?.uri && <Text style={styles.fileName}>{formData.buttonImage.name}</Text>}
-          </View>
-          
+          {formData.buttonImage?.uri && (
+            <Text style={styles.fileName}>{formData.buttonImage.name}</Text>
+          )}
+        </View>
+
         {/* Dispatch Date */}
         <View>
           <Text style={styles.label}>Dispatch Date</Text>
@@ -443,31 +488,33 @@ const FormField = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    // flex: 1,
     backgroundColor: "#ffffffff",
+    padding: 20,
+    marginBottom:10
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    margin: 0,
+    // backgroundColor: "red",
+    marginBottom:25,
   },
   header: {
     fontSize: 20,
     fontWeight: "700",
     color: "#1F2937",
-    flex: 1,
+    // flex: 1,
     textAlign: "center",
-    marginHorizontal: 10,
+    marginHorizontal: 15,
   },
   section: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     padding: 1,
     borderRadius: 12,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+  
   },
   sectionTitle: {
     fontSize: 16,
@@ -579,10 +626,10 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: "#2563EB",
-    paddingVertical: 16,
+    paddingVertical: 20,
     borderRadius: 1,
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 40,
   },
   submitButtonText: {
     color: "#fff",

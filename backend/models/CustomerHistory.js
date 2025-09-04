@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const CustomerHistorySchema = new mongoose.Schema({
   customerName: { type: String, required: true },
@@ -11,4 +11,4 @@ const CustomerHistorySchema = new mongoose.Schema({
   action: { type: String },
 });
 
-module.exports = mongoose.model('CustomerHistory', CustomerHistorySchema);
+module.exports = mongoose.model("CustomerHistory", CustomerHistorySchema);

@@ -118,7 +118,7 @@ router.post(
   "/orders/user",
   authorizeRoles(["user"]),
   upload.single("poImage"),
-   async (req, res) => {
+  async (req, res) => {
     try {
       const {
         companyName,
@@ -131,6 +131,7 @@ router.post(
         rate,
 
         // ✅ New optional fields
+        toolNumber,
         rawMaterials,
         linings,
         laser,
@@ -138,7 +139,7 @@ router.post(
         quantity,
         packingOption,
         buttonImage,
-        dispatchDate
+        dispatchDate,
       } = req.body;
 
       if (
@@ -149,7 +150,8 @@ router.post(
         !thickness ||
         !holes ||
         !boxType ||
-        !rate
+        !rate ||
+        !toolNumber
       ) {
         return res.status(400).json({ message: "Missing required fields" });
       }
@@ -174,6 +176,7 @@ router.post(
         token,
 
         // ✅ Save new optional fields
+        toolNumber,
         rawMaterials,
         linings,
         laser,
@@ -198,7 +201,6 @@ router.post(
     }
   }
 );
-
 
 router.post(
   "/orders",
@@ -217,6 +219,7 @@ router.post(
         rate,
 
         // ✅ New optional fields
+        toolNumber,
         rawMaterials,
         linings,
         laser,
@@ -224,7 +227,7 @@ router.post(
         quantity,
         packingOption,
         buttonImage,
-        dispatchDate
+        dispatchDate,
       } = req.body;
 
       if (
@@ -235,7 +238,8 @@ router.post(
         !thickness ||
         !holes ||
         !boxType ||
-        !rate
+        !rate ||
+        !toolNumber
       ) {
         return res.status(400).json({ message: "Missing required fields" });
       }
@@ -260,6 +264,7 @@ router.post(
         token,
 
         // ✅ Save new optional fields
+        toolNumber,
         rawMaterials,
         linings,
         laser,
@@ -284,7 +289,6 @@ router.post(
     }
   }
 );
-
 
 // router.get("/orders/track/:token", async (req, res) => {
 //   try {

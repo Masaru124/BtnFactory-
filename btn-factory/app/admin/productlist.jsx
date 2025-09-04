@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e2e8f0",
   },
   titleContainer: {
-    flex: 1,
+    padding:10,
     alignItems: "center",
   },
   title: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     color: "#64748b",
-    marginTop: 4,
+    marginTop: 20,
     marginLeft: 20,
   },
   listContent: {

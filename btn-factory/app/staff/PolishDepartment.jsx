@@ -69,8 +69,8 @@ const PolishDepartment = ({ onSubmit }) => {
       !ReceivedDate ||
       !startTime ||
       !endTime ||
-      !GrossWeight || 
-      !WtinKg 
+      !GrossWeight ||
+      !WtinKg
     ) {
       Alert.alert("Error", "Please fill in all casting fields");
       return;
@@ -101,7 +101,7 @@ const PolishDepartment = ({ onSubmit }) => {
       Alert.alert("Success", "Polish process data updated");
     } catch (error) {
       console.error("Submit error:", error);
-      Alert.alert("Error", "Failed to update casting data");
+      Alert.alert("Error", "Failed to update polishing data");
     } finally {
       setLoading(false);
     }
@@ -197,7 +197,7 @@ const PolishDepartment = ({ onSubmit }) => {
                   placeholder="Format: YYYY-MM-DDTHH:MM"
                   placeholderTextColor="#9ca3af"
                 />
-              </View> 
+              </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Receving Date from Laser/Turning</Text>
@@ -208,7 +208,7 @@ const PolishDepartment = ({ onSubmit }) => {
                   placeholder="Format: YYYY-MM-DDTHH:MM"
                   placeholderTextColor="#9ca3af"
                 />
-              </View> 
+              </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Start Time</Text>
@@ -242,8 +242,8 @@ const PolishDepartment = ({ onSubmit }) => {
                   placeholder="Gross Weight in Gram"
                   placeholderTextColor="#9ca3af"
                 />
-              </View> 
-              
+              </View>
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Wt.in Kgs</Text>
                 <TextInput
@@ -254,7 +254,7 @@ const PolishDepartment = ({ onSubmit }) => {
                   placeholder="Weight in Kgs"
                   placeholderTextColor="#9ca3af"
                 />
-              </View> 
+              </View>
 
               <TouchableOpacity
                 style={styles.submitButton}

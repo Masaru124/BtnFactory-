@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { AuthContext } from "../contexts/AuthContext";
 import RawMaterialDepartment from "./RawMaterialDepartment";
 import CastingDepartment from "./CastingDepartment";
+import { PolishDepartment } from "./PolishDepartment";
 import { API_URL } from "../../constants/api";
 const StaffScreen = () => {
   const authContext = useContext(AuthContext);
@@ -82,6 +83,37 @@ const StaffScreen = () => {
     }
   };
 
+  const handlePolishingSubmit = async (data) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/staff/orders/polish-process/${data.token}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authContext.userToken}`,
+          },
+          body: JSON.stringify({
+            totalSheets: data.totalSheets,
+            polishDate: data.polishDate,
+            receivedDate: data.receivedDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            GrossWeight: data.GrossWeight,
+            WtinKg: data.WtinKg,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update casting process data");
+      }
+      setMessage("Polishing process data updated successfully");
+    } catch (error) {
+      setMessage(error.message);
+      console.error("❌ Polishing Submit Error:", error);
+    }
+  };
+
   const renderDepartmentInterface = () => {
     const department = user?.departments?.[0];
     console.log("🔍 First department:", department);
@@ -94,6 +126,10 @@ const StaffScreen = () => {
       case "Casting":
         console.log("✅ Rendering Casting Interface");
         return <CastingDepartment onSubmit={handleCastingSubmit} />;
+
+      case "Polish":
+        console.log("Polishing Casting Interface");
+        return <PolishDepartment onSubmit={handlePolishingSubmit} />;
 
       default:
         console.warn("⚠️ No matching department found:", department);

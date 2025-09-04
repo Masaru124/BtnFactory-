@@ -17,6 +17,7 @@ const OrderSchema = new mongoose.Schema({
   laser: { type: String },
   polishType: { type: String },
   boxType: { type: String, required: true },
+  toolNumber: { type: Number, required: true },
   rate: { type: Number, required: true },
   quantity: { type: Number },
   packingOption: { type: String },
@@ -27,13 +28,14 @@ const OrderSchema = new mongoose.Schema({
   token: { type: String, required: true, unique: true },
 
   // Raw Material Department fields
-  rawMaterial: {
-    materialName: { type: String },
-    quantity: { type: Number },
-    totalPrice: { type: Number },
-    updatedAt: Date,
-  },
-
+  rawMaterials: [
+    {
+      materialName: { type: String, required: true },
+      quantity: { type: Number, required: true },
+      totalPrice: { type: Number, required: true },
+      updatedAt: { type: Date, default: Date.now },
+    },
+  ],
   // Casting Department fields
   castingProcess: {
     rawMaterialsUsed: { type: String },
@@ -41,6 +43,16 @@ const OrderSchema = new mongoose.Schema({
     sheetsWasted: { type: Number },
     startTime: { type: Date },
     endTime: { type: Date },
+  },
+
+  polishingProcess: {
+    totalSheets: { type: String },
+    polishDate: { type: String },
+    receivedDate: { type: String },
+    startTime: { type: String },
+    endTime: { type: String },
+    GrossWeight: { type: String },
+    WtinKg: { type: String },
   },
 });
 

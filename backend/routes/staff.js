@@ -40,48 +40,59 @@ router.post("/delivery", authorizeRoles(["staff"]), async (req, res) => {
   }
 });
 
+// 6FD7B644
 // Staff route to update raw material details for an order
-router.put(
+// Add raw materials to an existing order
+router.post(
   "/orders/raw-material/:token",
   authorizeRoles(["staff"]),
   async (req, res) => {
     const { token } = req.params;
-    const { materialName, quantity, totalPrice } = req.body;
+    const { materials } = req.body;
 
-    if (!materialName || !quantity || !totalPrice) {
-      return res.status(400).json({ message: "Missing required fields" });
+    if (!Array.isArray(materials) || materials.length === 0) {
+      return res.status(400).json({ message: "No materials provided" });
+    }
+
+    if (
+      materials.some((m) => !m.materialName || !m.quantity || !m.totalPrice)
+    ) {
+      return res.status(400).json({
+        message: "Each material must include all fields",
+      });
     }
 
     try {
       const order = await Order.findOne({ token });
       if (!order) {
-        console.warn(`❌ Order with token ${token} not found`);
         return res.status(404).json({ message: "Order not found" });
       }
 
-      order.rawMaterial = {
-        materialName,
-        quantity,
-        totalPrice,
+      // ✅ Push new materials instead of replacing
+      const newMaterials = materials.map((m) => ({
+        materialName: m.materialName,
+        quantity: m.quantity,
+        totalPrice: m.totalPrice,
         updatedAt: new Date(),
-      };
+      }));
 
+      order.rawMaterials.push(...newMaterials); // append array
       await order.save();
 
-      console.log(`✅ Raw material updated for token ${token}`);
-      res.json({
-        message: "Raw material details updated",
-        rawMaterial: order.rawMaterial,
+      res.status(201).json({
+        message: "✅ Raw materials added to order",
+        rawMaterials: order.rawMaterials,
       });
     } catch (err) {
-      console.error("❌ Error updating raw material:", err.message);
+      console.error("❌ Error adding raw materials:", err.message);
       res.status(500).json({
-        message: "Server error updating raw material details",
+        message: "Server error adding raw materials",
         error: err.message,
       });
     }
   }
 );
+
 
 // Staff route to update casting process data for an order
 router.put(
@@ -137,64 +148,80 @@ router.get(
 
 module.exports = router;
 
-//Polish route to update polish process data for an order
-// router.put(
-//   "/orders/polish-process/:token",
-//   authorizeRoles(["staff"]),
-//   async (req, res) => {
-//     const { token } = req.params;
-//     const { totalSheets, polishDate,receivedDate, startTime, endTime,GrossWeight,WtinKg } = req.body;
-//     try {
-//       const order = await Order.findOne({ token });
-//       if (!order) return res.status(404).json({ message: "Order not found" });
-//       order.polishProcess = {
-//         totalSheets,
-//         polishDate,
-//         receivedDate,
-//         startTime,
-//         endTime,
-//         GrossWeight,
-//         WtinKg
-//       };
-//       await order.save();
-//       res.json({ message: "Polish process data updated" });
-//     } catch (err) {
-//       res.status(400).json({
-//         message: "Error updating polish process data",
-//         error: err.message,
-//       });
-//     }
-//   }
-// );
-
+// Polish route to update polish process data for an order
+router.put(
+  "/orders/polish-process/:token",
+  authorizeRoles(["staff"]),
+  async (req, res) => {
+    const { token } = req.params;
+    const {
+      totalSheets,
+      polishDate,
+      receivedDate,
+      startTime,
+      endTime,
+      GrossWeight,
+      WtinKg,
+    } = req.body;
+    try {
+      const order = await Order.findOne({ token });
+      if (!order) return res.status(404).json({ message: "Order not found" });
+      order.polishProcess = {
+        totalSheets,
+        polishDate,
+        receivedDate,
+        startTime,
+        endTime,
+        GrossWeight,
+        WtinKg,
+      };
+      await order.save();
+      res.json({ message: "Polish process data updated" });
+    } catch (err) {
+      res.status(400).json({
+        message: "Error updating polish process data",
+        error: err.message,
+      });
+    }
+  }
+);
 
 //Turning route to update turning process data for an order
-// router.put(
-//   "/orders/turning-process/:token",
-//   authorizeRoles(["staff"]),
-//   async (req, res) => {
-//     const { token } = req.params;
-//     const { totalSheets, turningDate, receivedDate, startTime, endTime,GrossWeight,WtinKg, FinishThickness } = req.body;
-//     try {
-//       const order = await Order.findOne({ token });
-//       if (!order) return res.status(404).json({ message: "Order not found" });
-//       order.turningProcess = {
-//         totalSheets,
-//         turningDate,
-//         receivedDate,
-//         startTime,
-//         endTime,
-//         GrossWeight,
-//         WtinKg,
-//         FinishThickness
-//       };
-//       await order.save();
-//       res.json({ message: "Turning process data updated" });
-//     } catch (err) {
-//       res.status(400).json({
-//         message: "Error updating turning process data",
-//         error: err.message,
-//       });
-//     }
-//   }
-// );
+router.put(
+  "/orders/turning-process/:token",
+  authorizeRoles(["staff"]),
+  async (req, res) => {
+    const { token } = req.params;
+    const {
+      totalSheets,
+      turningDate,
+      receivedDate,
+      startTime,
+      endTime,
+      GrossWeight,
+      WtinKg,
+      FinishThickness,
+    } = req.body;
+    try {
+      const order = await Order.findOne({ token });
+      if (!order) return res.status(404).json({ message: "Order not found" });
+      order.turningProcess = {
+        totalSheets,
+        turningDate,
+        receivedDate,
+        startTime,
+        endTime,
+        GrossWeight,
+        WtinKg,
+        FinishThickness,
+      };
+      await order.save();
+      res.json({ message: "Turning process data updated" });
+    } catch (err) {
+      res.status(400).json({
+        message: "Error updating turning process data",
+        error: err.message,
+      });
+    }
+  }
+);

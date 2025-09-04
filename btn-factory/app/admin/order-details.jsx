@@ -123,7 +123,7 @@ export default function OrderDetailsScreen() {
             color: statusColors[orderData.status.toLowerCase()] || "#1E293B",
           }}
         />
-          <DetailRow label="PO Image" value={orderData.poImage} />
+        <DetailRow label="PO Image" value={orderData.poImage} />
 
         <SectionTitle title="Product Details" />
         <DetailRow label="Button Image" value={orderData.buttonImage} />
@@ -131,6 +131,7 @@ export default function OrderDetailsScreen() {
         <DetailRow label="Thickness" value={orderData.thickness} />
         <DetailRow label="Holes" value={orderData.holes} />
         <DetailRow label="Box Type" value={orderData.boxType} />
+        <DetailRow label="Tool Number" value={orderData.toolNumber} />
         <DetailRow
           label="Rate"
           value={`₹${orderData.rate.toLocaleString("en-IN")}`}
@@ -198,13 +199,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    padding: 10,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
   titleContainer: {
-    ...StyleSheet.absoluteFillObject, // Fill entire parent
     justifyContent: "center",
     alignItems: "center",
   },
