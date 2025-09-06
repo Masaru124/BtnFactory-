@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { AuthContext } from "../contexts/AuthContext";
 import RawMaterialDepartment from "./RawMaterialDepartment";
 import CastingDepartment from "./CastingDepartment";
-import { PolishDepartment } from "./PolishDepartment";
+import  PolishDepartment  from "./PolishDepartment";
 import { API_URL } from "../../constants/api";
 const StaffScreen = () => {
   const authContext = useContext(AuthContext);
@@ -105,7 +105,7 @@ const StaffScreen = () => {
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to update casting process data");
+        throw new Error("Failed to update polish process data");
       }
       setMessage("Polishing process data updated successfully");
     } catch (error) {

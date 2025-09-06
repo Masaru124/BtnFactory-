@@ -1,5 +1,4 @@
-// imports
-import React, { useState, useContext, ImagePicker } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -10,16 +9,29 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-// import * as ImagePicker from "expo-image-picker";
-// import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AuthContext } from "../contexts/AuthContext";
 import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
+
+// 🔹 Reusable Input Component
+const FormField = ({ label, value, onChangeText, placeholder, keyboardType }) => (
+  <View style={{ marginBottom: 15 }}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={styles.input}
+      value={value}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      keyboardType={keyboardType || "default"}
+    />
+  </View>
+);
 
 export default function CreateOrderScreen() {
   const { userToken } = useContext(AuthContext);
@@ -27,7 +39,6 @@ export default function CreateOrderScreen() {
     companyName: "",
     poNumber: "",
     poDate: new Date(),
-    poImage: null,
     casting: "Rod",
     otherCasting: "",
     thickness: "",
@@ -39,7 +50,6 @@ export default function CreateOrderScreen() {
     polishType: "",
     quantity: "",
     packingOption: "",
-    buttonImage: null,
     dispatchDate: null,
   });
 
@@ -48,51 +58,48 @@ export default function CreateOrderScreen() {
   const [showDispatchPicker, setShowDispatchPicker] = useState(false);
   const [createdToken, setCreatedToken] = useState(null);
 
+  // images are managed separately
+  const [poImage, setPoImage] = useState(null);
+  const [buttonImage, setButtonImage] = useState(null);
+
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === "ios");
+    setShowDatePicker(false);
     if (selectedDate) {
       handleChange("poDate", selectedDate);
     }
   };
 
   const handleDispatchDateChange = (event, selectedDate) => {
-    setShowDispatchPicker(Platform.OS === "ios");
+    setShowDispatchPicker(false);
     if (selectedDate) {
       handleChange("dispatchDate", selectedDate);
     }
   };
 
-  const pickImage = async (field) => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert(
-        "Permission required",
-        "Camera roll permission is required to pick images."
-      );
+  // 🔹 Image Picker
+  const pickImage = async (setImageState) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "Please grant permission to access gallery");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.Images],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
 
-    if (!result.canceled && result.assets?.length > 0) {
-      const asset = result.assets[0];
-      handleChange(field, {
-        uri: asset.uri,
-        name: asset.fileName || `${field}.jpg`,
-        type: asset.type || "image/jpeg",
-      });
+    if (!result.canceled) {
+      setImageState(result.assets[0]);
     }
   };
 
+  // 🔹 Submit Order
   const handleSubmit = async () => {
     const {
       companyName,
@@ -108,7 +115,6 @@ export default function CreateOrderScreen() {
       packingOption,
     } = formData;
 
-    // ✅ Validate required fields
     if (
       !companyName?.trim() ||
       !poNumber?.trim() ||
@@ -133,41 +139,35 @@ export default function CreateOrderScreen() {
       Object.entries(formData).forEach(([key, value]) => {
         if (!value) return;
 
-        // ✅ Handle dates (convert to YYYY-MM-DD)
         if (key === "poDate" || key === "dispatchDate") {
           data.append(key, new Date(value).toISOString().split("T")[0]);
-        }
-
-        // ✅ Handle images
-        else if ((key === "poImage" || key === "buttonImage") && value?.uri) {
-          data.append(key, {
-            uri: value.uri,
-            name: value.name || `${key}.jpg`,
-            type: value.type || "image/jpeg",
-          });
-        }
-
-        // ✅ Handle casting type
-        else if (key === "casting" && value === "Other") {
+        } else if (key === "casting" && value === "Other") {
           data.append("casting", formData.otherCasting?.trim() || "Other");
-        }
-
-        // ✅ Normal fields
-        else {
+        } else {
           data.append(key, value);
         }
       });
 
-      // 🔍 Debug log
-      for (let pair of data.entries()) {
-        console.log(pair[0], pair[1]);
+      // 🔹 Handle Images
+      if (poImage) {
+        data.append("poImage", {
+          uri: Platform.OS === "ios" ? poImage.uri.replace("file://", "") : poImage.uri,
+          name: poImage.fileName || `po.${poImage.type?.split("/")[1] || "jpg"}`,
+          type: poImage.type || "image/jpeg",
+        });
+      }
+
+      if (buttonImage) {
+        data.append("buttonImage", {
+          uri: Platform.OS === "ios" ? buttonImage.uri.replace("file://", "") : buttonImage.uri,
+          name: buttonImage.fileName || `button.${buttonImage.type?.split("/")[1] || "jpg"}`,
+          type: buttonImage.type || "image/jpeg",
+        });
       }
 
       const response = await fetch(`${API_URL}/api/admin/orders`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
+        headers: { Authorization: `Bearer ${userToken}` },
         body: data,
       });
 
@@ -193,7 +193,6 @@ export default function CreateOrderScreen() {
       companyName: "",
       poNumber: "",
       poDate: new Date(),
-      poImage: null,
       casting: "Rod",
       otherCasting: "",
       thickness: "",
@@ -205,21 +204,20 @@ export default function CreateOrderScreen() {
       polishType: "",
       quantity: "",
       packingOption: "",
-      buttonImage: null,
       dispatchDate: null,
     });
+    setPoImage(null);
+    setButtonImage(null);
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.headerContainer}>
         <BackButton />
         <Text style={styles.header}>Create New Order</Text>
         <View style={{ width: 24 }} />
       </View>
+
       {createdToken && (
         <View style={styles.tokenContainer}>
           <Text style={styles.tokenTitle}>Order Created Successfully</Text>
@@ -227,7 +225,7 @@ export default function CreateOrderScreen() {
         </View>
       )}
 
-      {/* Company Details Section */}
+      {/* Company Details */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Company Details</Text>
 
@@ -247,13 +245,8 @@ export default function CreateOrderScreen() {
 
         <View>
           <Text style={styles.label}>P.O. Date *</Text>
-          <TouchableOpacity
-            style={styles.dateInput}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateText}>
-              {formData.poDate.toLocaleDateString("en-IN")}
-            </Text>
+          <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.dateText}>{formData.poDate.toLocaleDateString("en-IN")}</Text>
             <MaterialIcons name="date-range" size={20} color="#555" />
           </TouchableOpacity>
           {showDatePicker && (
@@ -267,27 +260,13 @@ export default function CreateOrderScreen() {
         </View>
       </View>
 
-      {/* File Upload Section */}
-      <View style={styles.uploadContainer}>
-        <Text style={styles.label}>Upload PO Image</Text>
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => pickImage("poImage")}
-        >
-          <Feather
-            name="upload"
-            size={18}
-            color="#fff"
-            style={styles.uploadButtonLeft}
-          />
-          <Text style={styles.uploadButtonText}>Choose File</Text>
-        </TouchableOpacity>
-        {formData.poImage?.uri && (
-          <Text style={styles.fileName}>{formData.poImage.name}</Text>
-        )}
-      </View>
+      {/* PO Image Upload */}
+      <TouchableOpacity style={styles.fileButton} onPress={() => pickImage(setPoImage)}>
+        <Text style={styles.fileButtonText}>Choose PO Image</Text>
+      </TouchableOpacity>
+      {poImage && <Image source={{ uri: poImage.uri }} style={{ width: 100, height: 100 }} />}
 
-      {/* Product Details Section */}
+      {/* Product Details */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Product Details</Text>
 
@@ -300,9 +279,7 @@ export default function CreateOrderScreen() {
               onPress={() => handleChange("casting", option)}
             >
               <View style={styles.radioCircle}>
-                {formData.casting === option && (
-                  <View style={styles.selectedRb} />
-                )}
+                {formData.casting === option && <View style={styles.selectedRb} />}
               </View>
               <Text style={styles.radioText}>{option}</Text>
             </TouchableOpacity>
@@ -385,50 +362,25 @@ export default function CreateOrderScreen() {
         </View>
 
         <FormField
-          label="Tool Number"
-          value={formData.toolType}
-          onChangeText={(text) => handleChange("toolNumber", text)}
-          placeholder="Enter Tool Number"
-          keyboardType="decimal-pad"
-        />
-
-        <FormField
           label="Rate (₹) *"
           value={formData.rate}
           onChangeText={(text) => handleChange("rate", text)}
           placeholder="Enter rate per unit"
           keyboardType="decimal-pad"
-          prefix="₹"
         />
 
         {/* Button Image Upload */}
-
-        <View style={styles.uploadContainer}>
-          <Text style={styles.label}>Upload Button Image</Text>
-          <TouchableOpacity
-            style={styles.uploadButton}
-            onPress={() => pickImage("buttonImage")}
-          >
-            <Feather
-              name="upload"
-              size={18}
-              color="#fff"
-              style={styles.uploadButtonLeft}
-            />
-            <Text style={styles.uploadButtonText}>Choose File</Text>
-          </TouchableOpacity>
-          {formData.buttonImage?.uri && (
-            <Text style={styles.fileName}>{formData.buttonImage.name}</Text>
-          )}
-        </View>
+        <TouchableOpacity style={styles.fileButton} onPress={() => pickImage(setButtonImage)}>
+          <Text style={styles.fileButtonText}>Choose Button Image</Text>
+        </TouchableOpacity>
+        {buttonImage && (
+          <Image source={{ uri: buttonImage.uri }} style={{ width: 100, height: 100 }} />
+        )}
 
         {/* Dispatch Date */}
         <View>
           <Text style={styles.label}>Dispatch Date</Text>
-          <TouchableOpacity
-            style={styles.dateInput}
-            onPress={() => setShowDispatchPicker(true)}
-          >
+          <TouchableOpacity style={styles.dateInput} onPress={() => setShowDispatchPicker(true)}>
             <Text style={styles.dateText}>
               {formData.dispatchDate
                 ? formData.dispatchDate.toLocaleDateString("en-IN")
@@ -447,74 +399,37 @@ export default function CreateOrderScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.submitButtonText}>Create Order</Text>
-        )}
+      {/* Submit Button */}
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Create Order</Text>}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const FormField = ({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType,
-  prefix,
-}) => (
-  <View style={{ marginBottom: 16 }}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.inputWrapper}>
-      {prefix && <Text style={styles.prefix}>{prefix}</Text>}
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        keyboardType={keyboardType}
-        placeholderTextColor="#aaa"
-      />
-    </View>
-  </View>
-);
-
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
     padding: 20,
-    marginBottom:10
+    marginBottom: 10,
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    margin: 0,
-    // backgroundColor: "red",
-    marginBottom:25,
+    marginBottom: 25,
   },
   header: {
     fontSize: 20,
     fontWeight: "700",
     color: "#1F2937",
-    // flex: 1,
     textAlign: "center",
     marginHorizontal: 15,
   },
   section: {
-    // backgroundColor: "#fff",
     padding: 1,
     borderRadius: 12,
     marginBottom: 20,
-  
   },
   sectionTitle: {
     fontSize: 16,
@@ -527,28 +442,18 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     marginBottom: 10,
   },
-  inputWrapper: {
-    height: 50,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 1,
-    paddingHorizontal: 12,
-  },
   input: {
     flex: 1,
     paddingVertical: 15,
     fontSize: 14,
     color: "#111827",
-  },
-  prefix: {
-    marginRight: 6,
-    fontSize: 14,
-    color: "#6B7280",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 4,
+    paddingHorizontal: 10,
   },
   pickerContainer: {
     backgroundColor: "#F3F4F6",
-    borderRadius: 1,
+    borderRadius: 4,
     overflow: "hidden",
     marginBottom: 10,
   },
@@ -588,46 +493,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 1,
+    borderRadius: 4,
     marginBottom: 12,
   },
   dateText: {
     color: "#1F2937",
     fontSize: 14,
   },
-  uploadContainer: {
-    marginVertical: 12,
-  },
-  uploadButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  uploadButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#2563EB", // blue
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-  },
-  uploadButtonLeft: {
-    marginRight: 8,
-  },
-  uploadButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    marginLeft: 6,
-  },
-  fileName: {
-    color: "#6B7280",
-    fontSize: 13,
-    marginTop: 4,
-  },
   submitButton: {
     backgroundColor: "#2563EB",
     paddingVertical: 20,
-    borderRadius: 1,
+    borderRadius: 4,
     alignItems: "center",
     marginBottom: 40,
   },
@@ -637,7 +513,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   tokenContainer: {
-    backgroundColor: "#DBEAFE", // light blue
+    backgroundColor: "#DBEAFE",
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
@@ -650,5 +526,17 @@ const styles = StyleSheet.create({
   tokenText: {
     fontSize: 14,
     color: "#2563EB",
+  },
+  fileButton: {
+    backgroundColor: "#2563EB",
+    padding: 10,
+    borderRadius: 4,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  fileButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

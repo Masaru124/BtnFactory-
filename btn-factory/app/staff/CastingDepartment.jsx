@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
@@ -98,12 +99,28 @@ const CastingDepartment = ({ onSubmit }) => {
     }
   };
 
-  const OrderDetail = ({ label, value }) => (
+// Normalize casting type
+const isRodCasting = orderDetails?.casting?.toLowerCase().trim() === "rod";
+const OrderDetail = ({ label, value }) => {
+  const isImage =
+    typeof value === "string" &&
+    (value.startsWith("http") || value.startsWith("file:"));
+
+  return (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}:</Text>
-      <Text style={styles.detailValue}>{value || "—"}</Text>
+      {isImage ? (
+        <Image
+          source={{ uri: value }}
+          style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: "#f3f4f6" }}
+          resizeMode="cover"
+        />
+      ) : (
+        <Text style={styles.detailValue}>{value || "—"}</Text>
+      )}
     </View>
   );
+};
 
   return (
     <View style={styles.container}>
@@ -193,29 +210,36 @@ const CastingDepartment = ({ onSubmit }) => {
                 />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Sheets Produced</Text>
-                <TextInput
-                  style={styles.input}
-                  value={sheetsMade}
-                  onChangeText={setSheetsMade}
-                  keyboardType="numeric"
-                  placeholder="Number of sheets"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
+  {/* Dynamic label based on boxType */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                {isRodCasting ? "Rods Produced" : "Sheets Produced"}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={sheetsMade}
+                onChangeText={setSheetsMade}
+                keyboardType="numeric"
+                placeholder={isRodCasting ? "Number of rods" : "Number of sheets"}
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Sheets Wasted</Text>
-                <TextInput
-                  style={styles.input}
-                  value={sheetsWasted}
-                  onChangeText={setSheetsWasted}
-                  keyboardType="numeric"
-                  placeholder="Number of sheets"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>
+                {isRodCasting ? "Rods Wasted" : "Sheets Wasted"}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={sheetsWasted}
+                onChangeText={setSheetsWasted}
+                keyboardType="numeric"
+                placeholder={isRodCasting ? "Number of rods wasted" : "Number of sheets wasted"}
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Start Time</Text>
