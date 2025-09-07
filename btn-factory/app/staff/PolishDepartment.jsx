@@ -13,7 +13,7 @@ import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
-// import { set } from "mongoose";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const PolishDepartment = ({ onSubmit }) => {
   const authContext = useContext(AuthContext);
@@ -21,16 +21,26 @@ const PolishDepartment = ({ onSubmit }) => {
 
   const [token, setToken] = useState("");
   const [Totalsheets, setTotalSheets] = useState("");
+  const [GrossWeight, setGrossWeight] = useState("");
+  const [WtinKg, setWtinKg] = useState("");
+
+  // ✅ Missing states added
   const [PolishDate, setPolishDate] = useState("");
   const [ReceivedDate, setReceivedDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [GrossWeight, setGrossWeight] = useState("");   //  Added
-  const [WtinKg, setWtinKg] = useState("");             //  Added
+
+  // DateTimePicker visibility
+  const [showPolishDate, setShowPolishDate] = useState(false);
+  const [showReceivedDate, setShowReceivedDate] = useState(false);
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
+
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [accordionVisible, setAccordionVisible] = useState(false);
 
+  // 🔹 Fetch order by token
   const fetchOrder = async () => {
     if (!token) {
       Alert.alert("Error", "Please enter a valid token");
@@ -62,6 +72,7 @@ const PolishDepartment = ({ onSubmit }) => {
     }
   };
 
+  // 🔹 Submit Polish process
   const handleSubmit = async () => {
     if (
       !Totalsheets ||
@@ -72,7 +83,7 @@ const PolishDepartment = ({ onSubmit }) => {
       !GrossWeight ||
       !WtinKg
     ) {
-      Alert.alert("Error", "Please fill in all casting fields");
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
@@ -89,7 +100,7 @@ const PolishDepartment = ({ onSubmit }) => {
         WtinKg: Number(WtinKg),
       });
 
-      // Reset form
+      // ✅ Reset form
       setTotalSheets("");
       setPolishDate("");
       setReceivedDate("");
@@ -107,6 +118,7 @@ const PolishDepartment = ({ onSubmit }) => {
     }
   };
 
+  // 🔹 Order details component
   const OrderDetail = ({ label, value }) => (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}:</Text>
@@ -154,7 +166,7 @@ const PolishDepartment = ({ onSubmit }) => {
 
         {orderDetails && (
           <>
-            {/* Order Details Card */}
+            {/* Order Details */}
             <View style={styles.card}>
               <TouchableOpacity
                 onPress={() => setAccordionVisible(!accordionVisible)}
@@ -184,54 +196,124 @@ const PolishDepartment = ({ onSubmit }) => {
               )}
             </View>
 
-            {/* Casting Form Card */}
+            {/* Polish Form */}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Update Polish Process</Text>
 
+              {/* Polish Date */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Polish Date</Text>
-                <TextInput
-                  style={styles.input}
-                  value={PolishDate}
-                  onChangeText={setPolishDate}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowPolishDate(true)}
+                >
+                  <Ionicons name="calendar" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {PolishDate
+                      ? new Date(PolishDate).toLocaleDateString()
+                      : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showPolishDate && (
+                  <DateTimePicker
+                    value={PolishDate ? new Date(PolishDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowPolishDate(false);
+                      if (selectedDate)
+                        setPolishDate(selectedDate.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
+              {/* Receiving Date */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Receving Date from Laser/Turning</Text>
-                <TextInput
-                  style={styles.input}
-                  value={ReceivedDate}
-                  onChangeText={setReceivedDate}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <Text style={styles.inputLabel}>
+                  Receiving Date from Laser/Turning
+                </Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowReceivedDate(true)}
+                >
+                  <Ionicons name="calendar" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {ReceivedDate
+                      ? new Date(ReceivedDate).toLocaleDateString()
+                      : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showReceivedDate && (
+                  <DateTimePicker
+                    value={ReceivedDate ? new Date(ReceivedDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowReceivedDate(false);
+                      if (selectedDate)
+                        setReceivedDate(selectedDate.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
+              {/* Start Time */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Start Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowStartTime(true)}
+                >
+                  <Ionicons name="time" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {startTime
+                      ? new Date(startTime).toLocaleTimeString()
+                      : "Select Time"}
+                  </Text>
+                </TouchableOpacity>
+                {showStartTime && (
+                  <DateTimePicker
+                    value={startTime ? new Date(startTime) : new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowStartTime(false);
+                      if (selectedTime)
+                        setStartTime(selectedTime.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
+              {/* End Time */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>End Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowEndTime(true)}
+                >
+                  <Ionicons name="time" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {endTime
+                      ? new Date(endTime).toLocaleTimeString()
+                      : "Select Time"}
+                  </Text>
+                </TouchableOpacity>
+                {showEndTime && (
+                  <DateTimePicker
+                    value={endTime ? new Date(endTime) : new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowEndTime(false);
+                      if (selectedTime) setEndTime(selectedTime.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
+              {/* Gross Weight */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>1 Gross weight in Gram</Text>
                 <TextInput
@@ -244,6 +326,7 @@ const PolishDepartment = ({ onSubmit }) => {
                 />
               </View>
 
+              {/* Weight in Kgs */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Wt.in Kgs</Text>
                 <TextInput
@@ -264,11 +347,7 @@ const PolishDepartment = ({ onSubmit }) => {
                 {loading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <>
-                    <Text style={styles.submitButtonText}>
-                      Submit
-                    </Text>
-                  </>
+                  <Text style={styles.submitButtonText}>Submit</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -278,6 +357,7 @@ const PolishDepartment = ({ onSubmit }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -393,6 +473,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 15,
   },
+  dateButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f3f4f6",
+  padding: 10,
+  borderRadius: 8,
+  marginTop: 5,
+},
+dateButtonText: {
+  marginLeft: 8,
+  color: "#374151",
+  fontSize: 16,
+},
 });
 
 export default PolishDepartment;
