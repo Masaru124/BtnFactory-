@@ -99,9 +99,10 @@ const CastingDepartment = ({ onSubmit }) => {
     }
   };
 
-// Normalize casting type
-const isRodCasting = orderDetails?.casting?.toLowerCase().trim() === "rod";
-const OrderDetail = ({ label, value }) => {
+  // Normalize casting type
+  const isRodCasting = orderDetails?.casting?.toLowerCase().trim() === "rod";
+
+  const OrderDetail = ({ label, value }) => {
   const isImage =
     typeof value === "string" &&
     (value.startsWith("http") || value.startsWith("file:"));

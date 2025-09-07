@@ -142,47 +142,79 @@ router.post(
         dispatchDate,
       } = req.body;
 
-      if (
-        !companyName ||
-        !poNumber ||
-        !poDate ||
-        !casting ||
-        !thickness ||
-        !holes ||
-        !boxType ||
-        !rate ||
-        !toolNumber
-      ) {
-        return res.status(400).json({ message: "Missing required fields" });
+      // Enhanced validation with specific field checks
+      const requiredFields = {
+        companyName: "Company Name",
+        poNumber: "PO Number",
+        poDate: "PO Date",
+        casting: "Casting Type",
+        thickness: "Thickness",
+        holes: "Holes",
+        boxType: "Box Type",
+        rate: "Rate",
+        toolNumber: "Tool Number",
+      };
+
+      const missingFields = [];
+      for (const [field, label] of Object.entries(requiredFields)) {
+        if (!req.body[field] || req.body[field].toString().trim() === "") {
+          missingFields.push(label);
+        }
+      }
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          message: "Missing required fields",
+          missingFields: missingFields,
+        });
+      }
+
+      // Validate numeric fields
+      const numericFields = { rate, toolNumber, quantity };
+      for (const [field, value] of Object.entries(numericFields)) {
+        if (value !== undefined && value !== null && isNaN(Number(value))) {
+          return res.status(400).json({
+            message: `Invalid ${field} value. Must be a number.`,
+          });
+        }
+      }
+
+      // Check for duplicate PO number
+      const existingOrder = await Order.findOne({ poNumber: poNumber.trim() });
+      if (existingOrder) {
+        return res.status(409).json({
+          message: "PO Number already exists",
+          details: "An order with this PO number already exists in the system",
+        });
       }
 
       const poImagePath = req.file ? req.file.path : null;
 
       const token = crypto.randomBytes(4).toString("hex").toUpperCase();
-      console.log(token);
+      console.log("Generated token:", token);
 
       const newOrder = new Order({
-        companyName,
-        poNumber,
+        companyName: companyName.trim(),
+        poNumber: poNumber.trim(),
         poDate: new Date(poDate),
         poImage: poImagePath,
-        casting,
-        thickness,
-        holes,
-        boxType,
+        casting: casting.trim(),
+        thickness: thickness.trim(),
+        holes: holes.trim(),
+        boxType: boxType.trim(),
         rate: parseFloat(rate),
         status: "Pending",
         createdDate: new Date(),
         token,
 
-        // ✅ Save new optional fields
-        toolNumber,
+        // Save new optional fields
+        toolNumber: parseInt(toolNumber),
         rawMaterials,
-        linings,
-        laser,
-        polishType,
-        quantity,
-        packingOption,
+        linings: linings ? linings.trim() : undefined,
+        laser: laser ? laser.trim() : undefined,
+        polishType: polishType ? polishType.trim() : undefined,
+        quantity: quantity ? parseInt(quantity) : undefined,
+        packingOption: packingOption ? packingOption.trim() : undefined,
         buttonImage,
         dispatchDate: dispatchDate ? new Date(dispatchDate) : undefined,
       });
@@ -195,9 +227,30 @@ router.post(
         order: newOrder,
       });
     } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Error creating order", error: err.message });
+      console.error("Error creating order:", err);
+
+      // Handle validation errors
+      if (err.name === "ValidationError") {
+        return res.status(400).json({
+          message: "Validation error",
+          error: Object.values(err.errors)
+            .map((e) => e.message)
+            .join(", "),
+        });
+      }
+
+      // Handle duplicate key errors
+      if (err.code === 11000) {
+        return res.status(409).json({
+          message: "Duplicate entry",
+          error: "An order with this information already exists",
+        });
+      }
+
+      res.status(500).json({
+        message: "Error creating order",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
     }
   }
 );
@@ -230,47 +283,79 @@ router.post(
         dispatchDate,
       } = req.body;
 
-      if (
-        !companyName ||
-        !poNumber ||
-        !poDate ||
-        !casting ||
-        !thickness ||
-        !holes ||
-        !boxType ||
-        !rate ||
-        !toolNumber
-      ) {
-        return res.status(400).json({ message: "Missing required fields" });
+      // Enhanced validation with specific field checks
+      const requiredFields = {
+        companyName: "Company Name",
+        poNumber: "PO Number",
+        poDate: "PO Date",
+        casting: "Casting Type",
+        thickness: "Thickness",
+        holes: "Holes",
+        boxType: "Box Type",
+        rate: "Rate",
+        toolNumber: "Tool Number"
+      };
+
+      const missingFields = [];
+      for (const [field, label] of Object.entries(requiredFields)) {
+        if (!req.body[field] || req.body[field].toString().trim() === "") {
+          missingFields.push(label);
+        }
+      }
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          message: "Missing required fields",
+          missingFields: missingFields
+        });
+      }
+
+      // Validate numeric fields
+      const numericFields = { rate, toolNumber, quantity };
+      for (const [field, value] of Object.entries(numericFields)) {
+        if (value !== undefined && value !== null && isNaN(Number(value))) {
+          return res.status(400).json({
+            message: `Invalid ${field} value. Must be a number.`
+          });
+        }
+      }
+
+      // Check for duplicate PO number
+      const existingOrder = await Order.findOne({ poNumber: poNumber.trim() });
+      if (existingOrder) {
+        return res.status(409).json({
+          message: "PO Number already exists",
+          details: "An order with this PO number already exists in the system"
+        });
       }
 
       const poImagePath = req.file ? req.file.path : null;
 
       const token = crypto.randomBytes(4).toString("hex").toUpperCase();
-      console.log(token);
+      console.log("Generated token:", token);
 
       const newOrder = new Order({
-        companyName,
-        poNumber,
+        companyName: companyName.trim(),
+        poNumber: poNumber.trim(),
         poDate: new Date(poDate),
         poImage: poImagePath,
-        casting,
-        thickness,
-        holes,
-        boxType,
+        casting: casting.trim(),
+        thickness: thickness.trim(),
+        holes: holes.trim(),
+        boxType: boxType.trim(),
         rate: parseFloat(rate),
         status: "Pending",
         createdDate: new Date(),
         token,
 
         // ✅ Save new optional fields
-        toolNumber,
+        toolNumber: parseInt(toolNumber),
         rawMaterials,
-        linings,
-        laser,
-        polishType,
-        quantity,
-        packingOption,
+        linings: linings ? linings.trim() : undefined,
+        laser: laser ? laser.trim() : undefined,
+        polishType: polishType ? polishType.trim() : undefined,
+        quantity: quantity ? parseInt(quantity) : undefined,
+        packingOption: packingOption ? packingOption.trim() : undefined,
         buttonImage,
         dispatchDate: dispatchDate ? new Date(dispatchDate) : undefined,
       });
@@ -283,9 +368,28 @@ router.post(
         order: newOrder,
       });
     } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Error creating order", error: err.message });
+      console.error("Error creating order:", err);
+
+      // Handle validation errors
+      if (err.name === "ValidationError") {
+        return res.status(400).json({
+          message: "Validation error",
+          error: Object.values(err.errors).map(e => e.message).join(', ')
+        });
+      }
+
+      // Handle duplicate key errors
+      if (err.code === 11000) {
+        return res.status(409).json({
+          message: "Duplicate entry",
+          error: "An order with this information already exists"
+        });
+      }
+
+      res.status(500).json({
+        message: "Error creating order",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined
+      });
     }
   }
 );
@@ -334,6 +438,93 @@ router.get("/orders", authorizeRoles(["admin"]), async (req, res) => {
       .json({ message: "Error fetching orders", error: err.message });
   }
 });
+
+// Admin route to update an order by identifier (ID or PO Number)
+router.put(
+  "/orders/:identifier",
+  authorizeRoles(["admin"]),
+  async (req, res) => {
+    const { identifier } = req.params;
+    const updateData = req.body;
+
+    try {
+      // Validate identifier exists
+      if (!identifier) {
+        return res
+          .status(400)
+          .json({ message: "Order identifier is required" });
+      }
+
+      // Build query (case-insensitive for poNumber)
+      const isObjectId = mongoose.Types.ObjectId.isValid(identifier);
+      const query = isObjectId
+        ? { _id: identifier }
+        : { poNumber: { $regex: new RegExp(`^${identifier}$`, "i") } };
+
+      // Remove fields that shouldn't be updated directly
+      const restrictedFields = ["_id", "createdDate", "token", "userId"];
+      restrictedFields.forEach((field) => delete updateData[field]);
+
+      // Convert numeric fields
+      if (updateData.rate) updateData.rate = parseFloat(updateData.rate);
+      if (updateData.quantity)
+        updateData.quantity = parseInt(updateData.quantity);
+      if (updateData.toolNumber)
+        updateData.toolNumber = parseInt(updateData.toolNumber);
+
+      // Convert date fields
+      if (updateData.poDate) updateData.poDate = new Date(updateData.poDate);
+      if (updateData.dispatchDate)
+        updateData.dispatchDate = new Date(updateData.dispatchDate);
+
+      // Find and update
+      const updatedOrder = await Order.findOneAndUpdate(
+        query,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedOrder) {
+        return res.status(404).json({
+          message: "Order not found",
+          details: `No order found with ${
+            isObjectId ? "ID" : "PO Number"
+          }: ${identifier}`,
+        });
+      }
+
+      // Success response
+      res.json({
+        success: true,
+        message: "Order updated successfully",
+        order: updatedOrder,
+      });
+    } catch (err) {
+      console.error("Update order error:", err);
+
+      // Handle validation errors
+      if (err.name === "ValidationError") {
+        return res.status(400).json({
+          message: "Validation error",
+          error: Object.values(err.errors)
+            .map((e) => e.message)
+            .join(", "),
+        });
+      }
+
+      // Handle cast errors
+      if (err.name === "CastError") {
+        return res.status(400).json({ message: "Invalid data format" });
+      }
+
+      // Generic error response
+      res.status(500).json({
+        message: "Error updating order",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
+  }
+);
 
 // Admin route to delete an order by ID
 const mongoose = require("mongoose");
