@@ -528,7 +528,6 @@ router.put(
 );
 
 // Admin route to delete an order by ID
-const mongoose = require("mongoose");
 
 router.delete(
   "/orders/:identifier",
