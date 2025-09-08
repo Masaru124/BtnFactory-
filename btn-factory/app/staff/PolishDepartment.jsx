@@ -20,9 +20,9 @@ const PolishDepartment = ({ onSubmit }) => {
   const { signOut, userToken } = authContext;
 
   const [token, setToken] = useState("");
-  const [Totalsheets, setTotalSheets] = useState("");
-  const [GrossWeight, setGrossWeight] = useState("");
-  const [WtinKg, setWtinKg] = useState("");
+  const [totalSheets, setTotalSheets] = useState("");
+  const [grossWeight, setGrossWeight] = useState("");
+  const [wtinKg, setWtinKg] = useState("");
 
   // ✅ Missing states added
   const [PolishDate, setPolishDate] = useState("");
@@ -75,13 +75,13 @@ const PolishDepartment = ({ onSubmit }) => {
   // 🔹 Submit Polish process
   const handleSubmit = async () => {
     if (
-      !Totalsheets ||
+      !totalSheets ||
       !PolishDate ||
       !ReceivedDate ||
       !startTime ||
       !endTime ||
-      !GrossWeight ||
-      !WtinKg
+      !grossWeight ||
+      !wtinKg
     ) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -91,13 +91,13 @@ const PolishDepartment = ({ onSubmit }) => {
       setLoading(true);
       await onSubmit({
         token,
-        Totalsheets: Number(Totalsheets),
-        PolishDate: new Date(PolishDate),
-        ReceivedDate: new Date(ReceivedDate),
+        totalSheets: Number(totalSheets),
+        polishDate: new Date(PolishDate),
+        receivedDate: new Date(ReceivedDate),
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        GrossWeight: Number(GrossWeight),
-        WtinKg: Number(WtinKg),
+        GrossWeight: Number(grossWeight),
+        WtinKg: Number(wtinKg),
       });
 
       // ✅ Reset form
@@ -313,12 +313,25 @@ const PolishDepartment = ({ onSubmit }) => {
                 )}
               </View>
 
+              {/* Total Sheets */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Total Sheets</Text>
+                <TextInput
+                  style={styles.input}
+                  value={totalSheets}
+                  onChangeText={setTotalSheets}
+                  keyboardType="numeric"
+                  placeholder="Enter total sheets"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
               {/* Gross Weight */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>1 Gross weight in Gram</Text>
                 <TextInput
                   style={styles.input}
-                  value={GrossWeight}
+                  value={grossWeight}
                   onChangeText={setGrossWeight}
                   keyboardType="numeric"
                   placeholder="Gross Weight in Gram"
@@ -331,7 +344,7 @@ const PolishDepartment = ({ onSubmit }) => {
                 <Text style={styles.inputLabel}>Wt.in Kgs</Text>
                 <TextInput
                   style={styles.input}
-                  value={WtinKg}
+                  value={wtinKg}
                   onChangeText={setWtinKg}
                   keyboardType="numeric"
                   placeholder="Weight in Kgs"
