@@ -89,7 +89,7 @@ export default function CreateOrderScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: [ImagePicker.MediaTypeOptions.Images],
       allowsEditing: true,
       quality: 1,
     });
