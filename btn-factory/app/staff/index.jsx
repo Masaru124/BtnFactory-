@@ -28,21 +28,23 @@ const StaffScreen = () => {
       const response = await fetch(
         `${API_URL}/api/staff/orders/raw-material/${data.token}`,
         {
-          method: "PUT",
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${authContext.userToken}`, // 🔐 optional, if backend requires it
+            Authorization: `Bearer ${authContext.userToken}`,
           },
           body: JSON.stringify({
-            materialName: data.materialName,
-            quantity: data.quantity,
-            totalPrice: data.totalPrice,
+            materials: [{
+              materialName: data.materialName,
+              quantity: Number(data.quantity),
+              totalPrice: Number(data.totalPrice),
+            }],
           }),
         }
       );
 
       if (!response.ok) {
-        const errorText = await response.text(); // debug info
+        const errorText = await response.text();
         console.error("❌ API response error:", errorText);
         throw new Error("Failed to update raw material details");
       }
