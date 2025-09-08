@@ -146,8 +146,6 @@ router.get(
   }
 );
 
-module.exports = router;
-
 // Polish route to update polish process data for an order
 router.put(
   "/orders/polish-process/:token",
@@ -225,3 +223,5 @@ router.put(
     }
   }
 );
+
+module.exports = router;
