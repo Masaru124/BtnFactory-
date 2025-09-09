@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import * as SecureStore from "expo-secure-store";
 import { API_URL } from "../../constants/api";
 import { useRouter } from "expo-router";
@@ -7,7 +7,7 @@ export const AuthContext = createContext(undefined);
 
 const AuthProvider = ({ children }) => {
   const router = useRouter();
-  const [user, setUser] = useState(null); // 👈 NEW
+  const [user, setUser] = useState(null);
   const [userToken, setUserToken] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
   const [userDepartments, setUserDepartments] = useState([]);
@@ -24,7 +24,7 @@ const AuthProvider = ({ children }) => {
         setUserToken(token);
         setUserRoles(roles ? JSON.parse(roles) : []);
         setUserDepartments(departments ? JSON.parse(departments) : []);
-        setUser(storedUser ? JSON.parse(storedUser) : null); // 👈 Load full user
+        setUser(storedUser ? JSON.parse(storedUser) : null);
       } catch (err) {
         console.error("❌ Failed to restore session:", err);
       } finally {
@@ -60,22 +60,22 @@ const AuthProvider = ({ children }) => {
         departments: departmentsArray,
       };
 
-      console.log("✅ Roles:", rolesArray);
-      console.log("✅ Departments:", departmentsArray);
-
-      // Store everything
+      // Store securely
       await SecureStore.setItemAsync("userToken", data.token);
       await SecureStore.setItemAsync("userRoles", JSON.stringify(rolesArray));
-      await SecureStore.setItemAsync("userDepartments", JSON.stringify(departmentsArray));
-      await SecureStore.setItemAsync("user", JSON.stringify(userObject)); // 👈 Store full user
+      await SecureStore.setItemAsync(
+        "userDepartments",
+        JSON.stringify(departmentsArray)
+      );
+      await SecureStore.setItemAsync("user", JSON.stringify(userObject));
 
-      // Set state
+      // Update state
       setUserToken(data.token);
       setUserRoles(rolesArray);
       setUserDepartments(departmentsArray);
-      setUser(userObject); // 👈 Set full user
+      setUser(userObject);
 
-      // Redirect
+      // Redirect based on role
       if (rolesArray.includes("admin")) {
         router.replace("/admin");
       } else if (rolesArray.includes("staff")) {
@@ -96,7 +96,7 @@ const AuthProvider = ({ children }) => {
       await SecureStore.deleteItemAsync("userToken");
       await SecureStore.deleteItemAsync("userRoles");
       await SecureStore.deleteItemAsync("userDepartments");
-      await SecureStore.deleteItemAsync("user"); // 👈 clear stored user
+      await SecureStore.deleteItemAsync("user");
     } catch (err) {
       console.error("❌ Logout error:", err);
     } finally {
@@ -124,6 +124,15 @@ const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+// ✅ custom hook
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };
 
 export default AuthProvider;

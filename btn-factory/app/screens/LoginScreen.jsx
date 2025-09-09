@@ -60,7 +60,7 @@ const LoginScreen = () => {
   };
 
   return (
-    // <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -138,7 +138,7 @@ const LoginScreen = () => {
           )}
         </View>
       </KeyboardAvoidingView>
-    // </TouchableWithoutFeedback>
+    </TouchableWithoutFeedback>
   );
 };
 

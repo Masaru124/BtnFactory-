@@ -5,7 +5,9 @@ const OrderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: false,
-  }, // ✅ changed
+  },
+
+  // Core Order Info
   companyName: { type: String, required: true },
   poNumber: { type: String, required: true },
   poDate: { type: Date, required: true },
@@ -27,7 +29,7 @@ const OrderSchema = new mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
   token: { type: String, required: true, unique: true },
 
-  // Raw Material Department fields
+  // ✅ Raw Material Department fields
   rawMaterials: [
     {
       materialName: { type: String, required: true },
@@ -36,7 +38,8 @@ const OrderSchema = new mongoose.Schema({
       updatedAt: { type: Date, default: Date.now },
     },
   ],
-  // Casting Department fields
+
+  // ✅ Casting Department fields
   castingProcess: {
     rawMaterialsUsed: { type: String },
     sheetsMade: { type: Number },
@@ -45,14 +48,27 @@ const OrderSchema = new mongoose.Schema({
     endTime: { type: Date },
   },
 
-  polishingProcess: {
-    totalSheets: { type: String },
-    polishDate: { type: String },
-    receivedDate: { type: String },
-    startTime: { type: String },
-    endTime: { type: String },
-    GrossWeight: { type: String },
-    WtinKg: { type: String },
+  // ✅ Polishing Department fields (fixed name to match routes)
+  polishProcess: {
+    totalSheets: { type: Number }, 
+    polishDate: { type: Date },
+    receivedDate: { type: Date },
+    startTime: { type: Date },
+    endTime: { type: Date },
+    GrossWeight: { type: Number },
+    WtinKg: { type: Number },
+  },
+
+  // ✅ Turning Department fields (added, missing before)
+  turningProcess: {
+    totalSheets: { type: Number },
+    turningDate: { type: Date },
+    receivedDate: { type: Date },
+    startTime: { type: Date },
+    endTime: { type: Date },
+    GrossWeight: { type: Number },
+    WtinKg: { type: Number },
+    FinishThickness: { type: Number },
   },
 });
 

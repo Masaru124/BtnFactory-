@@ -20,7 +20,13 @@ import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 
 // 🔹 Reusable Input Component
-const FormField = ({ label, value, onChangeText, placeholder, keyboardType }) => (
+const FormField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+}) => (
   <View style={{ marginBottom: 15 }}>
     <Text style={styles.label}>{label}</Text>
     <TextInput
@@ -84,7 +90,10 @@ export default function CreateOrderScreen() {
   const pickImage = async (setImageState) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission required", "Please grant permission to access gallery");
+      Alert.alert(
+        "Permission required",
+        "Please grant permission to access gallery"
+      );
       return;
     }
 
@@ -151,16 +160,25 @@ export default function CreateOrderScreen() {
       // 🔹 Handle Images
       if (poImage) {
         data.append("poImage", {
-          uri: Platform.OS === "ios" ? poImage.uri.replace("file://", "") : poImage.uri,
-          name: poImage.fileName || `po.${poImage.type?.split("/")[1] || "jpg"}`,
+          uri:
+            Platform.OS === "ios"
+              ? poImage.uri.replace("file://", "")
+              : poImage.uri,
+          name:
+            poImage.fileName || `po.${poImage.type?.split("/")[1] || "jpg"}`,
           type: poImage.type || "image/jpeg",
         });
       }
 
       if (buttonImage) {
         data.append("buttonImage", {
-          uri: Platform.OS === "ios" ? buttonImage.uri.replace("file://", "") : buttonImage.uri,
-          name: buttonImage.fileName || `button.${buttonImage.type?.split("/")[1] || "jpg"}`,
+          uri:
+            Platform.OS === "ios"
+              ? buttonImage.uri.replace("file://", "")
+              : buttonImage.uri,
+          name:
+            buttonImage.fileName ||
+            `button.${buttonImage.type?.split("/")[1] || "jpg"}`,
           type: buttonImage.type || "image/jpeg",
         });
       }
@@ -211,7 +229,10 @@ export default function CreateOrderScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.headerContainer}>
         <BackButton />
         <Text style={styles.header}>Create New Order</Text>
@@ -245,8 +266,13 @@ export default function CreateOrderScreen() {
 
         <View>
           <Text style={styles.label}>P.O. Date *</Text>
-          <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.dateText}>{formData.poDate.toLocaleDateString("en-IN")}</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateText}>
+              {formData.poDate.toLocaleDateString("en-IN")}
+            </Text>
             <MaterialIcons name="date-range" size={20} color="#555" />
           </TouchableOpacity>
           {showDatePicker && (
@@ -261,10 +287,18 @@ export default function CreateOrderScreen() {
       </View>
 
       {/* PO Image Upload */}
-      <TouchableOpacity style={styles.fileButton} onPress={() => pickImage(setPoImage)}>
+      <TouchableOpacity
+        style={styles.fileButton}
+        onPress={() => pickImage(setPoImage)}
+      >
         <Text style={styles.fileButtonText}>Choose PO Image</Text>
       </TouchableOpacity>
-      {poImage && <Image source={{ uri: poImage.uri }} style={{ width: 100, height: 100 }} />}
+      {poImage && (
+        <Image
+          source={{ uri: poImage.uri }}
+          style={{ width: 100, height: 100 }}
+        />
+      )}
 
       {/* Product Details */}
       <View style={styles.section}>
@@ -279,7 +313,9 @@ export default function CreateOrderScreen() {
               onPress={() => handleChange("casting", option)}
             >
               <View style={styles.radioCircle}>
-                {formData.casting === option && <View style={styles.selectedRb} />}
+                {formData.casting === option && (
+                  <View style={styles.selectedRb} />
+                )}
               </View>
               <Text style={styles.radioText}>{option}</Text>
             </TouchableOpacity>
@@ -370,17 +406,26 @@ export default function CreateOrderScreen() {
         />
 
         {/* Button Image Upload */}
-        <TouchableOpacity style={styles.fileButton} onPress={() => pickImage(setButtonImage)}>
+        <TouchableOpacity
+          style={styles.fileButton}
+          onPress={() => pickImage(setButtonImage)}
+        >
           <Text style={styles.fileButtonText}>Choose Button Image</Text>
         </TouchableOpacity>
         {buttonImage && (
-          <Image source={{ uri: buttonImage.uri }} style={{ width: 100, height: 100 }} />
+          <Image
+            source={{ uri: buttonImage.uri }}
+            style={{ width: 100, height: 100 }}
+          />
         )}
 
         {/* Dispatch Date */}
         <View>
           <Text style={styles.label}>Dispatch Date</Text>
-          <TouchableOpacity style={styles.dateInput} onPress={() => setShowDispatchPicker(true)}>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowDispatchPicker(true)}
+          >
             <Text style={styles.dateText}>
               {formData.dispatchDate
                 ? formData.dispatchDate.toLocaleDateString("en-IN")
@@ -400,8 +445,16 @@ export default function CreateOrderScreen() {
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Create Order</Text>}
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Create Order</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -411,8 +464,10 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     padding: 20,
-    marginBottom: 10,
+    paddingBottom: 40,
   },
+
+  // Header
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -420,15 +475,15 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   header: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
-    color: "#1F2937",
+    color: "#111827",
     textAlign: "center",
-    marginHorizontal: 15,
+    flex: 1,
   },
+
+  // Sections
   section: {
-    padding: 1,
-    borderRadius: 12,
     marginBottom: 20,
   },
   sectionTitle: {
@@ -437,34 +492,39 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: "#1F2937",
   },
+
+  // Labels & Inputs
   label: {
     fontSize: 14,
     color: "#6B7280",
-    marginBottom: 10,
+    marginBottom: 6,
   },
   input: {
-    flex: 1,
-    paddingVertical: 15,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     fontSize: 14,
     color: "#111827",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 4,
-    paddingHorizontal: 10,
   },
+
+  // Picker
   pickerContainer: {
     backgroundColor: "#F3F4F6",
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: 10,
+    borderRadius: 8,
+    marginBottom: 12,
   },
   picker: {
-    height: 50,
-    color: "#1F2937",
+    height: 48,
+    color: "#111827",
   },
+
+  // Radio Buttons
   radioGroup: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
+    justifyContent: "flex-start",
+    gap: 20,
+    marginBottom: 12,
   },
   radioOption: {
     flexDirection: "row",
@@ -474,8 +534,8 @@ const styles = StyleSheet.create({
     height: 18,
     width: 18,
     borderRadius: 9,
-    borderWidth: 1,
-    borderColor: "#3B82F6",
+    borderWidth: 2,
+    borderColor: "#2563EB",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 6,
@@ -484,59 +544,72 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#2563EB",
   },
+  radioText: {
+    fontSize: 14,
+    color: "#111827",
+  },
+
+  // Date Picker
   dateInput: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
+    borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 4,
+    paddingVertical: 12,
     marginBottom: 12,
   },
   dateText: {
-    color: "#1F2937",
+    color: "#111827",
     fontSize: 14,
   },
-  submitButton: {
-    backgroundColor: "#2563EB",
-    paddingVertical: 20,
-    borderRadius: 4,
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  tokenContainer: {
-    backgroundColor: "#DBEAFE",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  tokenTitle: {
-    fontWeight: "bold",
-    color: "#2563EB",
-    marginBottom: 4,
-  },
-  tokenText: {
-    fontSize: 14,
-    color: "#2563EB",
-  },
+
+  // File Upload
   fileButton: {
     backgroundColor: "#2563EB",
-    padding: 10,
-    borderRadius: 4,
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   fileButtonText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+
+  // Submit Button
+  submitButton: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+
+  // Success Token
+  tokenContainer: {
+    backgroundColor: "#EFF6FF",
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+  },
+  tokenTitle: {
+    fontWeight: "700",
+    color: "#1D4ED8",
+    marginBottom: 6,
+    fontSize: 15,
+  },
+  tokenText: {
+    fontSize: 14,
+    color: "#1D4ED8",
   },
 });
