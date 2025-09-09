@@ -13,6 +13,8 @@ import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+
 // import { set } from "mongoose";
 
 const PackingDepartment = ({ onSubmit }) => {
@@ -20,8 +22,10 @@ const PackingDepartment = ({ onSubmit }) => {
   const { signOut, userToken } = authContext;
 
   const [token, setToken] = useState("");
-  const [PackingDate, setTurningDate] = useState("");
-  const [ReceivedDate, setReceivedDate] = useState("");
+    const [PackingDate, setPackingDate] = useState("");
+    const [ReceivedDate, setReceivedDate] = useState("");
+      const [showPackingDate, setShowPackingDate] = useState(false);
+      const [showReceivedDate, setShowReceivedDate] = useState(false);
   const [GrossWeight, setGrossWeight] = useState("");   //  Added
   const [WtinKg, setWtinKg] = useState("");             //  Added
   const [FinishType, setFinishType] = useState("");             //  Added
@@ -84,7 +88,7 @@ const PackingDepartment = ({ onSubmit }) => {
       });
 
       // Reset form
-      setTurningDate("");
+      setPackingDate("");
       setReceivedDate("");
       setGrossWeight("");
       setWtinKg("");
@@ -176,27 +180,63 @@ const PackingDepartment = ({ onSubmit }) => {
               <Text style={styles.cardTitle}>Update Packing Process</Text>
 
 
+              {/* Packing Date */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Packing Date</Text>
-                <TextInput
-                  style={styles.input}
-                  value={PackingDate}
-                  onChangeText={setTurningDate}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                 placeholderTextColor="#9ca3af"
-                />
-              </View> 
+                <Text style={styles.inputLabel}>Polish Date</Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowPackingDate(true)}
+                >
+                  <Ionicons name="calendar" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {PackingDate
+                      ? new Date(PackingDate).toLocaleDateString()
+                      : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showPackingDate && (
+                  <DateTimePicker
+                    value={PackingDate ? new Date(PackingDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowPackingDate(false);
+                      if (selectedDate)
+                        setPackingDate(selectedDate.toISOString());
+                    }}
+                  />
+                )}
+              </View>
 
+              {/* Receiving Date */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Receving Date for Packing</Text>
-                <TextInput
-                  style={styles.input}
-                  value={ReceivedDate}
-                  onChangeText={setReceivedDate}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View> 
+                <Text style={styles.inputLabel}>
+                  Receiving Date from Laser/Turning
+                </Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowReceivedDate(true)}
+                >
+                  <Ionicons name="calendar" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {ReceivedDate
+                      ? new Date(ReceivedDate).toLocaleDateString()
+                      : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showReceivedDate && (
+                  <DateTimePicker
+                    value={ReceivedDate ? new Date(ReceivedDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowReceivedDate(false);
+                      if (selectedDate)
+                        setReceivedDate(selectedDate.toISOString());
+                    }}
+                  />
+                )}
+              </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>1 Gross weight in Gram</Text>
@@ -356,6 +396,19 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     fontWeight: "500",
   },
+    dateButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f3f4f6",
+  padding: 10,
+  borderRadius: 8,
+  marginTop: 5,
+},
+dateButtonText: {
+  marginLeft: 8,
+  color: "#374151",
+  fontSize: 16,
+},
   submitButton: {
     backgroundColor: "#10b981",
     borderRadius: 8,

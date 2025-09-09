@@ -13,6 +13,7 @@ import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 // import { set } from "mongoose";
 
 const TurningDepartment = ({ onSubmit }) => {
@@ -25,6 +26,11 @@ const TurningDepartment = ({ onSubmit }) => {
   const [ReceivedDate, setReceivedDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+
+  const [showTurningDate, setShowTurningDate] = useState(false);
+  const [showReceivedDate, setShowReceivedDate] = useState(false);
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
   const [GrossWeight, setGrossWeight] = useState("");   //  Added
   const [WtinKg, setWtinKg] = useState("");             //  Added
   const [FinishThickness, setFinishThickness] = useState("");             //  Added
@@ -187,48 +193,117 @@ const TurningDepartment = ({ onSubmit }) => {
               <Text style={styles.cardTitle}>Update Turning Process</Text>
 
 
+              {/* Turning Date */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Turning Date</Text>
-                <TextInput
-                  style={styles.input}
-                  value={TurningDate}
-                  onChangeText={setTurningDate}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                 placeholderTextColor="#9ca3af"
-                />
-              </View> 
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Receving Date for Turning</Text>
-                <TextInput
-                  style={styles.input}
-                  value={ReceivedDate}
-                  onChangeText={setReceivedDate}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View> 
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Start Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowTurningDate(true)}
+                >
+                  <Ionicons name="calendar" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {TurningDate
+                      ? new Date(TurningDate).toLocaleDateString()
+                      : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showTurningDate && (
+                  <DateTimePicker
+                    value={TurningDate ? new Date(TurningDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowTurningDate(false);
+                      if (selectedDate)
+                        setTurningDate(selectedDate.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
+              {/* Receiving Date */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  Receiving Date for Turning
+                </Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowReceivedDate(true)}
+                >
+                  <Ionicons name="calendar" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {ReceivedDate
+                      ? new Date(ReceivedDate).toLocaleDateString()
+                      : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showReceivedDate && (
+                  <DateTimePicker
+                    value={ReceivedDate ? new Date(ReceivedDate) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowReceivedDate(false);
+                      if (selectedDate)
+                        setReceivedDate(selectedDate.toISOString());
+                    }}
+                  />
+                )}
+              </View>
+
+              {/* Start Time */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Start Time</Text>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowStartTime(true)}
+                >
+                  <Ionicons name="time" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {startTime
+                      ? new Date(startTime).toLocaleTimeString()
+                      : "Select Time"}
+                  </Text>
+                </TouchableOpacity>
+                {showStartTime && (
+                  <DateTimePicker
+                    value={startTime ? new Date(startTime) : new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowStartTime(false);
+                      if (selectedTime)
+                        setStartTime(selectedTime.toISOString());
+                    }}
+                  />
+                )}
+              </View>
+
+              {/* End Time */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>End Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowEndTime(true)}
+                >
+                  <Ionicons name="time" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {endTime
+                      ? new Date(endTime).toLocaleTimeString()
+                      : "Select Time"}
+                  </Text>
+                </TouchableOpacity>
+                {showEndTime && (
+                  <DateTimePicker
+                    value={endTime ? new Date(endTime) : new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowEndTime(false);
+                      if (selectedTime) setEndTime(selectedTime.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
               <View style={styles.inputGroup}>
@@ -389,6 +464,19 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     fontWeight: "500",
   },
+    dateButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f3f4f6",
+  padding: 10,
+  borderRadius: 8,
+  marginTop: 5,
+},
+dateButtonText: {
+  marginLeft: 8,
+  color: "#374151",
+  fontSize: 16,
+},
   submitButton: {
     backgroundColor: "#10b981",
     borderRadius: 8,
