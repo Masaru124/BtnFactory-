@@ -14,6 +14,7 @@ import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 import { AuthContext } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const CastingDepartment = ({ onSubmit }) => {
   const authContext = useContext(AuthContext);
@@ -23,8 +24,10 @@ const CastingDepartment = ({ onSubmit }) => {
   const [rawMaterialsUsed, setRawMaterialsUsed] = useState("");
   const [sheetsMade, setSheetsMade] = useState("");
   const [sheetsWasted, setSheetsWasted] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+    const [startTime, setStartTime] = useState("");
+      const [endTime, setEndTime] = useState("");
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [accordionVisible, setAccordionVisible] = useState(false);
@@ -242,26 +245,59 @@ const CastingDepartment = ({ onSubmit }) => {
 
 
 
+                            {/* Start Time */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Start Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowStartTime(true)}
+                >
+                  <Ionicons name="time" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {startTime
+                      ? new Date(startTime).toLocaleTimeString()
+                      : "Select Time"}
+                  </Text>
+                </TouchableOpacity>
+                {showStartTime && (
+                  <DateTimePicker
+                    value={startTime ? new Date(startTime) : new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowStartTime(false);
+                      if (selectedTime)
+                        setStartTime(selectedTime.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
+              {/* End Time */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>End Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="Format: YYYY-MM-DDTHH:MM"
-                  placeholderTextColor="#9ca3af"
-                />
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowEndTime(true)}
+                >
+                  <Ionicons name="time" size={20} color="#374151" />
+                  <Text style={styles.dateButtonText}>
+                    {endTime
+                      ? new Date(endTime).toLocaleTimeString()
+                      : "Select Time"}
+                  </Text>
+                </TouchableOpacity>
+                {showEndTime && (
+                  <DateTimePicker
+                    value={endTime ? new Date(endTime) : new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowEndTime(false);
+                      if (selectedTime) setEndTime(selectedTime.toISOString());
+                    }}
+                  />
+                )}
               </View>
 
               <TouchableOpacity
@@ -401,6 +437,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 15,
   },
+  dateButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f3f4f6",
+  padding: 10,
+  borderRadius: 8,
+  marginTop: 5,
+},
+dateButtonText: {
+  marginLeft: 8,
+  color: "#374151",
+  fontSize: 16,
+},
 });
 
 export default CastingDepartment;

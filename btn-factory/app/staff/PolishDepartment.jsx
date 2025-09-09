@@ -24,18 +24,15 @@ const PolishDepartment = ({ onSubmit }) => {
   const [grossWeight, setGrossWeight] = useState("");
   const [wtinKg, setWtinKg] = useState("");
 
-  // ✅ Missing states added
   const [PolishDate, setPolishDate] = useState("");
   const [ReceivedDate, setReceivedDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  // DateTimePicker visibility
   const [showPolishDate, setShowPolishDate] = useState(false);
   const [showReceivedDate, setShowReceivedDate] = useState(false);
   const [showStartTime, setShowStartTime] = useState(false);
   const [showEndTime, setShowEndTime] = useState(false);
-
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [accordionVisible, setAccordionVisible] = useState(false);
