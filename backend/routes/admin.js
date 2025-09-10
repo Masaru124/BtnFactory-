@@ -225,12 +225,10 @@ async function createOrder(req, res) {
     }
 
     if (err.code === 11000) {
-      return res
-        .status(409)
-        .json({
-          message: "Duplicate entry",
-          error: "An order with this information already exists",
-        });
+      return res.status(409).json({
+        message: "Duplicate entry",
+        error: "An order with this information already exists",
+      });
     }
 
     res.status(500).json({ message: "Error creating order" });
@@ -279,62 +277,55 @@ router.get("/orders", authorizeRoles(["admin"]), async (req, res) => {
 });
 
 // Update order by ID or PO Number (admin only)
-router.put(
-  "/orders/:identifier",
-  authorizeRoles(["admin"]),
-  async (req, res) => {
-    try {
-      const { identifier } = req.params;
-      if (!identifier)
-        return res
-          .status(400)
-          .json({ message: "Order identifier is required" });
+router.put("/orders/:token", authorizeRoles(["admin"]), async (req, res) => {
+  try {
+    const { token } = req.params;
+    if (!token)
+      return res.status(400).json({ message: "Order token is required" });
 
-      const isObjectId = mongoose.Types.ObjectId.isValid(identifier);
-      const query = isObjectId
-        ? { _id: identifier }
-        : { poNumber: new RegExp(`^${identifier}$`, "i") };
+    // Find the order using the token only
+    const query = { token: new RegExp(`^${token}$`, "i") };
 
-      const updateData = { ...req.body };
-      ["_id", "createdDate", "token", "userId"].forEach(
-        (f) => delete updateData[f]
-      );
+    const updateData = { ...req.body };
+    // Remove fields that shouldn't be updated
+    ["_id", "createdDate", "userId", "token"].forEach(
+      (f) => delete updateData[f]
+    );
 
-      if (updateData.rate) updateData.rate = parseFloat(updateData.rate);
-      if (updateData.quantity)
-        updateData.quantity = parseInt(updateData.quantity);
-      if (updateData.toolNumber)
-        updateData.toolNumber = parseInt(updateData.toolNumber);
-      if (updateData.poDate) updateData.poDate = new Date(updateData.poDate);
-      if (updateData.dispatchDate)
-        updateData.dispatchDate = new Date(updateData.dispatchDate);
+    // Convert numeric fields
+    if (updateData.rate) updateData.rate = parseFloat(updateData.rate);
+    if (updateData.quantity)
+      updateData.quantity = parseInt(updateData.quantity);
+    if (updateData.toolNumber)
+      updateData.toolNumber = parseInt(updateData.toolNumber);
+    if (updateData.poDate) updateData.poDate = new Date(updateData.poDate);
+    if (updateData.dispatchDate)
+      updateData.dispatchDate = new Date(updateData.dispatchDate);
 
-      const updatedOrder = await Order.findOneAndUpdate(
-        query,
-        { $set: updateData },
-        { new: true, runValidators: true }
-      );
-      if (!updatedOrder) {
-        return res
-          .status(404)
-          .json({
-            message: "Order not found",
-            details: `${isObjectId ? "ID" : "PO Number"}: ${identifier}`,
-          });
-      }
+    const updatedOrder = await Order.findOneAndUpdate(
+      query,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
 
-      res.json({
-        success: true,
-        message: "Order updated successfully",
-        order: updatedOrder,
+    if (!updatedOrder) {
+      return res.status(404).json({
+        message: "Order not found",
+        details: `Token: ${token}`,
       });
-    } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Error updating order", error: err.message });
     }
+
+    res.json({
+      success: true,
+      message: "Order updated successfully",
+      order: updatedOrder,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error updating order", error: err.message });
   }
-);
+});
 
 // Delete order by ID or PO Number (admin only)
 router.delete(
