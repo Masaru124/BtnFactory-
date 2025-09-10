@@ -276,13 +276,14 @@ function OrderListScreen() {
         </View>
         <Link href="/admin/create-order" asChild>
           <TouchableOpacity style={styles.addButton}>
-            <Ionicons name="add" size={24} color="#4f46e5" />
+            <Ionicons name="add" size={28} color="#4f46e5" />
           </TouchableOpacity>
         </Link>
       </View>
-      <Text style={styles.subtitle}>
+
+      {/* <Text style={styles.subtitle}>
         {orders.length} order{orders.length !== 1 ? "s" : ""} in system
-      </Text>
+      </Text> */}
 
       {error && (
         <View style={styles.errorContainer}>
@@ -407,12 +408,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    padding: 10,
+    // borderBottomWidth: 1,
+    // borderBottomColor: "#e2e8f0",
   },
   titleContainer: {
-    padding:10,
+    padding: 10,
     alignItems: "center",
   },
   title: {

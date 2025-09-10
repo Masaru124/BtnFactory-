@@ -136,6 +136,7 @@ export default function AddUserScreen() {
           </View>
 
           {/* Role Picker */}
+          {/* Role Picker */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Role</Text>
             <View style={styles.pickerContainer}>
@@ -152,28 +153,30 @@ export default function AddUserScreen() {
             </View>
           </View>
 
-          {/* Department Picker */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Department</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={department}
-                onValueChange={(value) => setDepartment(value)}
-                style={styles.picker}
-              >
-                <Picker.Item
-                  label="Select Department..."
-                  value=""
-                  enabled={false}
-                />
-                <Picker.Item label="Raw Material" value="Raw Material" />
-                <Picker.Item label="Casting" value="Casting" />
-                <Picker.Item label="Turning" value="Turning" />
-                <Picker.Item label="Polish" value="Polish" />
-                <Picker.Item label="Packing" value="Packing" />
-              </Picker>
+          {/* Department Picker (only for Staff) */}
+          {role === "staff" && (
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Department</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={department}
+                  onValueChange={(value) => setDepartment(value)}
+                  style={styles.picker}
+                >
+                  <Picker.Item
+                    label="Select Department..."
+                    value=""
+                    enabled={false}
+                  />
+                  <Picker.Item label="Raw Material" value="Raw Material" />
+                  <Picker.Item label="Casting" value="Casting" />
+                  <Picker.Item label="Turning" value="Turning" />
+                  <Picker.Item label="Polish" value="Polish" />
+                  <Picker.Item label="Packing" value="Packing" />
+                </Picker>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Button */}
           <TouchableOpacity
@@ -192,9 +195,6 @@ export default function AddUserScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
   container: {
     flex: 1,
     backgroundColor: "#ffffffff",
@@ -205,8 +205,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   titleContainer: {
     ...StyleSheet.absoluteFillObject, // Fill entire parent
@@ -218,13 +216,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 22,
     color: "#000000",
     marginTop: 4,
-    textAlign: "center",
+    textAlign: "left",
+    padding: 16,
+    fontWeight: 800,
   },
   addusercontainer: {
-    padding: 20,
+    padding: 16,
   },
   formGroup: {
     marginBottom: 20,
@@ -261,6 +261,7 @@ const styles = StyleSheet.create({
     borderColor: "#000000ff",
     borderWidth: 0.3,
     borderRadius: 10,
+    // padding: 10,
     overflow: "hidden",
     backgroundColor: "#ffffff",
     ...Platform.select({

@@ -115,43 +115,36 @@ const ManageUsers = () => {
         <Text style={styles.title}>User Management</Text>
         <View style={{ width: 24 }} />
       </View>
-      <Text style={styles.subtitle}>
+      {/* <Text style={styles.subtitle}>
         {users.length} user{users.length !== 1 ? "s" : ""} found
-      </Text>
-
+      </Text> */}
       <FlatList
         data={users}
         keyExtractor={(item) => item.username}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={["#4f46e5"]}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.centeredContainer}>
-            <Text style={styles.emptyText}>No users found</Text>
-          </View>
-        }
         renderItem={({ item }) => (
           <View style={styles.userCard}>
             <View style={styles.userInfo}>
               <Text style={styles.username}>{item.username}</Text>
+
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Roles:</Text>
                 <Text style={styles.detailValue}>
                   {(item.roles || []).join(", ") || "None"}
                 </Text>
               </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Departments:</Text>
-                <Text style={styles.detailValue}>
-                  {(item.departments || []).join(", ") || "None"}
-                </Text>
-              </View>
+
+              {/* Show department only for staff */}
+              {item.roles?.includes("staff") && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Departments:</Text>
+                  <Text style={styles.detailValue}>
+                    {(item.departments || []).join(", ") || "None"}
+                  </Text>
+                </View>
+              )}
             </View>
+
             <TouchableOpacity
               onPress={() => deleteUser(item.username)}
               style={styles.deleteButton}
@@ -171,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffffff",
   },
   centeredContainer: {
-    flex: 1,
+    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 1,
@@ -182,8 +175,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   titleContainer: {
     ...StyleSheet.absoluteFillObject, // Fill entire parent
@@ -206,55 +197,49 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   userCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    borderWidth: 0.5,
-    padding: 8,
-    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 0,
-      },
-    }),
+    alignItems: "center", // center vertically
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    borderColor: "#00000018",
+    borderWidth: 1,
   },
   userInfo: {
     flex: 1,
-  },
-  username: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1e293b",
-    marginBottom: 8,
+    marginRight: 12,
+    justifyContent: "center", // vertically center roles & department
   },
   detailRow: {
     flexDirection: "row",
+    alignItems: "center", // vertical alignment
     marginBottom: 4,
   },
   detailLabel: {
     fontSize: 13,
-    color: "#64748b",
+    color: "#6b7280",
     fontWeight: "500",
     marginRight: 6,
+    width: 80, // fixed width for labels to align values
   },
   detailValue: {
     fontSize: 13,
-    color: "#334155",
+    color: "#374151",
+    flexShrink: 1, // wrap long text
   },
+
   deleteButton: {
     backgroundColor: "#fee2e2",
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 1,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#fecaca",
   },

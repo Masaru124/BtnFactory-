@@ -137,7 +137,7 @@ export const useAuth = () => {
 
 export default AuthProvider;
 
-// import React, { createContext, useState, useEffect } from "react";
+// import React, { createContext, useState, useEffect, useContext } from "react";
 // import { API_URL } from "../../constants/api";
 // import { useRouter } from "expo-router";
 
@@ -291,6 +291,15 @@ export default AuthProvider;
 //       {children}
 //     </AuthContext.Provider>
 //   );
+// };
+
+// // ✅ custom hook
+// export const useAuth = () => {
+//   const context = useContext(AuthContext);
+//   if (!context) {
+//     throw new Error("useAuth must be used within an AuthProvider");
+//   }
+//   return context;
 // };
 
 // export default AuthProvider;

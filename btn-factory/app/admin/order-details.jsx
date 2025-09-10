@@ -413,7 +413,12 @@ export default function OrderDetailsScreen() {
           <>
             <TouchableOpacity
               style={styles.editBtn}
-              onPress={() => setIsEditing(true)}
+              onPress={() =>
+                router.push({
+                  pathname: "/admin/editorder",
+                  params: { order: JSON.stringify(orderData) },
+                })
+              }
             >
               <Text style={styles.editBtnText}>Edit Order</Text>
             </TouchableOpacity>
