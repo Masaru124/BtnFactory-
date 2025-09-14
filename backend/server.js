@@ -41,6 +41,11 @@ const createDefaultAdmin = async () => {
   }
 };
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'API is running' });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", authenticateToken, userRoutes);

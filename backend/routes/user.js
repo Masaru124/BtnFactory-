@@ -10,6 +10,43 @@ const router = express.Router();
 // 🔐 Protect all routes by default
 router.use(authenticateToken);
 
+// ✅ GET user profile
+router.get("/profile", (req, res) => {
+  res.json({
+    username: req.user.username,
+    roles: req.user.roles,
+    departments: req.user.departments,
+    fullName: req.user.fullName
+  });
+});
+
+// ✅ UPDATE user profile
+router.put("/profile", async (req, res) => {
+  try {
+    const { fullName } = req.body;
+    
+    // Update user in database
+    const user = await req.user.model('User').findById(req.user._id);
+    if (fullName) user.fullName = fullName;
+    await user.save();
+    
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        username: user.username,
+        fullName: user.fullName,
+        roles: user.roles,
+        departments: user.departments
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error updating profile",
+      error: err.message
+    });
+  }
+});
+
 // ✅ GET all orders for the logged-in user
 router.get("/orders", async (req, res) => {
   try {

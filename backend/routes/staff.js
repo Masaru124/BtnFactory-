@@ -1,6 +1,7 @@
 const express = require("express");
 const Delivery = require("../models/Delivery");
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const authenticateToken = require("../middleware/authenticateToken");
 const authorizeRoles = require("../middleware/authorizeRoles");
 
@@ -20,6 +21,10 @@ router.put("/products/:id", authorizeRoles(["staff"]), async (req, res) => {
     await product.save();
     res.json({ message: "Product stock updated" });
   } catch (err) {
+    // For testing purposes, if the error is a CastError (invalid ObjectId), return 404
+    if (err.name === 'CastError' && err.kind === 'ObjectId') {
+      return res.status(404).json({ message: "Product not found" });
+    }
     res
       .status(400)
       .json({ message: "Error updating product", error: err.message });
