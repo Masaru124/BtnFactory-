@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Modal,
+  Pressable,
 } from "react-native";
 import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
@@ -17,27 +19,27 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const CastingDepartment = ({ onSubmit }) => {
-  const authContext = useContext(AuthContext);
-  const { signOut, userToken } = authContext;
+  const { signOut, userToken } = useContext(AuthContext);
 
   const [token, setToken] = useState("");
   const [rawMaterialsUsed, setRawMaterialsUsed] = useState("");
   const [sheetsMade, setSheetsMade] = useState("");
   const [sheetsWasted, setSheetsWasted] = useState("");
-    const [startTime, setStartTime] = useState("");
-      const [endTime, setEndTime] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [showStartTime, setShowStartTime] = useState(false);
   const [showEndTime, setShowEndTime] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [accordionVisible, setAccordionVisible] = useState(false);
 
+  const [settingsVisible, setSettingsVisible] = useState(false);
+
   const fetchOrder = async () => {
     if (!token) {
       Alert.alert("Error", "Please enter a valid token");
       return;
     }
-
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/api/staff/orders/${token}`, {
@@ -51,11 +53,9 @@ const CastingDepartment = ({ onSubmit }) => {
         const errorText = await response.text();
         throw new Error(errorText || "Order not found");
       }
-
       const data = await response.json();
       setOrderDetails(data);
     } catch (error) {
-      console.error("Error fetching order:", error.message);
       Alert.alert("Error", error.message);
       setOrderDetails(null);
     } finally {
@@ -64,17 +64,10 @@ const CastingDepartment = ({ onSubmit }) => {
   };
 
   const handleSubmit = async () => {
-    if (
-      !rawMaterialsUsed ||
-      !sheetsMade ||
-      !sheetsWasted ||
-      !startTime ||
-      !endTime
-    ) {
+    if (!rawMaterialsUsed || !sheetsMade || !sheetsWasted || !startTime || !endTime) {
       Alert.alert("Error", "Please fill in all casting fields");
       return;
     }
-
     try {
       setLoading(true);
       await onSubmit({
@@ -86,7 +79,6 @@ const CastingDepartment = ({ onSubmit }) => {
         endTime: new Date(endTime),
       });
 
-      // Reset form
       setRawMaterialsUsed("");
       setSheetsMade("");
       setSheetsWasted("");
@@ -95,45 +87,43 @@ const CastingDepartment = ({ onSubmit }) => {
 
       Alert.alert("Success", "Casting process data updated");
     } catch (error) {
-      console.error("Submit error:", error);
       Alert.alert("Error", "Failed to update casting data");
     } finally {
       setLoading(false);
     }
   };
 
-  // Normalize casting type
   const isRodCasting = orderDetails?.casting?.toLowerCase().trim() === "rod";
 
   const OrderDetail = ({ label, value }) => {
-  const isImage =
-    typeof value === "string" &&
-    (value.startsWith("http") || value.startsWith("file:"));
+    const isImage =
+      typeof value === "string" &&
+      (value.startsWith("http") || value.startsWith("file:"));
 
-  return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}:</Text>
-      {isImage ? (
-        <Image
-          source={{ uri: value }}
-          style={{ width: 80, height: 80, borderRadius: 8, backgroundColor: "#f3f4f6" }}
-          resizeMode="cover"
-        />
-      ) : (
-        <Text style={styles.detailValue}>{value || "—"}</Text>
-      )}
-    </View>
-  );
-};
+    return (
+      <View style={styles.detailRow}>
+        <Text style={styles.detailLabel}>{label}:</Text>
+        {isImage ? (
+          <Image
+            source={{ uri: value }}
+            style={styles.detailImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={styles.detailValue}>{value || "—"}</Text>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <BackButton />
+        {/* <BackButton /> */}
         <Text style={styles.headerTitle}>Casting Department</Text>
-        <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#ef4444" />
+        <TouchableOpacity onPress={() => setSettingsVisible(true)}>
+          <Ionicons name="settings-outline" size={24} color="#111" />
         </TouchableOpacity>
       </View>
 
@@ -149,7 +139,7 @@ const CastingDepartment = ({ onSubmit }) => {
             onChangeText={setToken}
           />
           <TouchableOpacity
-            style={styles.searchButton}
+            style={styles.primaryButton}
             onPress={fetchOrder}
             disabled={loading}
           >
@@ -158,7 +148,7 @@ const CastingDepartment = ({ onSubmit }) => {
             ) : (
               <>
                 <Ionicons name="search" size={18} color="#fff" />
-                <Text style={styles.searchButtonText}>Search Order</Text>
+                <Text style={styles.primaryButtonText}>Search Order</Text>
               </>
             )}
           </TouchableOpacity>
@@ -166,7 +156,7 @@ const CastingDepartment = ({ onSubmit }) => {
 
         {orderDetails && (
           <>
-            {/* Order Details Card */}
+            {/* Order Details */}
             <View style={styles.card}>
               <TouchableOpacity
                 onPress={() => setAccordionVisible(!accordionVisible)}
@@ -182,14 +172,8 @@ const CastingDepartment = ({ onSubmit }) => {
 
               {accordionVisible && (
                 <View style={styles.accordionContent}>
-                  <OrderDetail
-                    label="Company"
-                    value={orderDetails.companyName}
-                  />
-                  <OrderDetail
-                    label="Casting Type"
-                    value={orderDetails.casting}
-                  />
+                  <OrderDetail label="Company" value={orderDetails.companyName} />
+                  <OrderDetail label="Casting Type" value={orderDetails.casting} />
                   <OrderDetail label="Box Type" value={orderDetails.boxType} />
                   <OrderDetail label="Thickness" value={orderDetails.thickness} />
                   <OrderDetail label="Holes" value={orderDetails.holes} />
@@ -199,7 +183,7 @@ const CastingDepartment = ({ onSubmit }) => {
               )}
             </View>
 
-            {/* Casting Form Card */}
+            {/* Casting Form */}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Update Casting Process</Text>
 
@@ -214,38 +198,37 @@ const CastingDepartment = ({ onSubmit }) => {
                 />
               </View>
 
-  {/* Dynamic label based on boxType */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                {isRodCasting ? "Rods Produced" : "Sheets Produced"}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={sheetsMade}
-                onChangeText={setSheetsMade}
-                keyboardType="numeric"
-                placeholder={isRodCasting ? "Number of rods" : "Number of sheets"}
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {isRodCasting ? "Rods Produced" : "Sheets Produced"}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={sheetsMade}
+                  onChangeText={setSheetsMade}
+                  keyboardType="numeric"
+                  placeholder={isRodCasting ? "Number of rods" : "Number of sheets"}
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                {isRodCasting ? "Rods Wasted" : "Sheets Wasted"}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={sheetsWasted}
-                onChangeText={setSheetsWasted}
-                keyboardType="numeric"
-                placeholder={isRodCasting ? "Number of rods wasted" : "Number of sheets wasted"}
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {isRodCasting ? "Rods Wasted" : "Sheets Wasted"}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={sheetsWasted}
+                  onChangeText={setSheetsWasted}
+                  keyboardType="numeric"
+                  placeholder={
+                    isRodCasting ? "Number of rods wasted" : "Number of sheets wasted"
+                  }
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
 
-
-
-                            {/* Start Time */}
+              {/* Start Time */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Start Time</Text>
                 <TouchableOpacity
@@ -266,8 +249,7 @@ const CastingDepartment = ({ onSubmit }) => {
                     display="default"
                     onChange={(event, selectedTime) => {
                       setShowStartTime(false);
-                      if (selectedTime)
-                        setStartTime(selectedTime.toISOString());
+                      if (selectedTime) setStartTime(selectedTime.toISOString());
                     }}
                   />
                 )}
@@ -282,9 +264,7 @@ const CastingDepartment = ({ onSubmit }) => {
                 >
                   <Ionicons name="time" size={20} color="#374151" />
                   <Text style={styles.dateButtonText}>
-                    {endTime
-                      ? new Date(endTime).toLocaleTimeString()
-                      : "Select Time"}
+                    {endTime ? new Date(endTime).toLocaleTimeString() : "Select Time"}
                   </Text>
                 </TouchableOpacity>
                 {showEndTime && (
@@ -301,155 +281,124 @@ const CastingDepartment = ({ onSubmit }) => {
               </View>
 
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[styles.primaryButton, { backgroundColor: "#10b981" }]}
                 onPress={handleSubmit}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <>
-                    <Text style={styles.submitButtonText}>
-                      Submit
-                    </Text>
-                  </>
+                  <Text style={styles.primaryButtonText}>Submit</Text>
                 )}
               </TouchableOpacity>
             </View>
           </>
         )}
       </ScrollView>
+
+      {/* Settings Bottom Sheet */}
+      <Modal
+        visible={settingsVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSettingsVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setSettingsVisible(false)}
+        />
+        <View style={styles.bottomSheet}>
+          <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+            <Ionicons name="log-out-outline" size={20} color="red" />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffffff",
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#ffffff",
+    alignItems: "center",
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    borderColor: "#e5e7eb",
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  logoutButton: {
-    padding: 8,
-  },
-  content: {
-    paddingBottom: 32,
-  },
+  headerTitle: { fontSize: 20, fontWeight: "600", color: "#111" },
+  content: { padding: 16 },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 10,
+    padding: 16,
     marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1e293b",
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    color: "#475569",
-    marginBottom: 8,
-    fontWeight: "500",
-  },
+  cardTitle: { fontSize: 16, fontWeight: "600", marginBottom: 12, color: "#1e293b" },
+  inputGroup: { marginBottom: 20 },
+  inputLabel: { fontSize: 14, color: "#475569", marginBottom: 6 },
   input: {
     backgroundColor: "#f1f5f9",
     borderRadius: 8,
-    padding: 14,
-    fontSize: 14,
-    color: "#334155",
+    padding: 12,
+    fontSize: 16,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    color: "#111",
   },
-  searchButton: {
+  primaryButton: {
     backgroundColor: "#4f46e5",
     borderRadius: 8,
     padding: 14,
-    marginTop: 10,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  accordionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  accordionTitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#475569",
-  },
-  accordionContent: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: "#64748b",
-  },
-  detailValue: {
-    fontSize: 14,
-    color: "#1e293b",
-    fontWeight: "500",
-  },
-  submitButton: {
-    backgroundColor: "#10b981",
-    borderRadius: 8,
-    padding: 16,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
     marginTop: 8,
   },
-  submitButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 15,
+  primaryButtonText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  accordionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
   },
+  accordionTitle: { fontSize: 14, fontWeight: "500", color: "#4b5563" },
+  accordionContent: { marginTop: 8 },
+  detailRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  detailLabel: { fontSize: 14, color: "#64748b" },
+  detailValue: { fontSize: 14, fontWeight: "500", color: "#1e293b" },
+  detailImage: { width: 80, height: 80, borderRadius: 8, backgroundColor: "#f3f4f6" },
   dateButton: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#f3f4f6",
-  padding: 10,
-  borderRadius: 8,
-  marginTop: 5,
-},
-dateButtonText: {
-  marginLeft: 8,
-  color: "#374151",
-  fontSize: 16,
-},
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 5,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  dateButtonText: { marginLeft: 8, color: "#374151", fontSize: 15 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)" },
+  bottomSheet: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+  },
+  logoutButton: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12 },
+  logoutText: { color: "red", fontWeight: "600", fontSize: 16 },
 });
 
 export default CastingDepartment;

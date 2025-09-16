@@ -1,28 +1,42 @@
-import { TouchableOpacity, StyleSheet } from "react-native";
+import { TouchableOpacity, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Ionicons } from "@expo/vector-icons"; 
 
-const BackButton = ({ color = "#333", size = 28 }) => {
+const BackButton = ({ label = "Back" }) => {
   const router = useRouter();
 
   return (
     <TouchableOpacity
       onPress={() => router.back()}
       style={styles.button}
-      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
     >
-      <Ionicons name="chevron-back" size={size} color="black" />
+      <Ionicons name="chevron-back" size={20} color="#000" />
+      {/* <Text style={styles.label}>{label}</Text> */}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#ffffffff",
-    margin: 0,
-    marginLeft: 0,
-    padding: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e7e7e7ff", // light gray bg (like shadcn secondary)
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 9999, // full pill
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#000",
+    marginLeft: 4,
   },
 });
 

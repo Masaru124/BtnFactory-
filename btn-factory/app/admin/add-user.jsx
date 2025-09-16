@@ -19,28 +19,18 @@ export default function AddUserScreen() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(""); // "Select" state
-  const [department, setDepartment] = useState(""); // "Select" state
+  const [role, setRole] = useState("");
+  const [department, setDepartment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddUser = async () => {
-    console.log("Creating user with:", {
-      username,
-      password,
-      role,
-      department,
-    });
-
-    if (!username || !password || !role || !department) {
+    if (!username || !password || !role || (role === "staff" && !department)) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     if (!userToken) {
-      Alert.alert(
-        "Error",
-        "Authentication token not found. Please log in again."
-      );
+      Alert.alert("Error", "Authentication token not found. Please log in again.");
       return;
     }
 
@@ -50,7 +40,7 @@ export default function AddUserScreen() {
       username,
       password,
       roles: [role],
-      departments: [department],
+      departments: role === "staff" ? [department] : [],
     };
 
     try {
@@ -63,19 +53,7 @@ export default function AddUserScreen() {
         body: JSON.stringify(payload),
       });
 
-      const contentType = response.headers.get("content-type");
-      let data;
-
-      if (contentType?.includes("application/json")) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        console.error("Non-JSON response:", text);
-        throw new Error(text || "Failed to create user");
-      }
-
-      console.log("API response:", data);
-
+      const data = await response.json();
       if (response.ok) {
         Alert.alert("Success", "User created successfully");
         resetForm();
@@ -83,7 +61,6 @@ export default function AddUserScreen() {
         Alert.alert("Error", data.message || "Failed to create user");
       }
     } catch (error) {
-      console.error("Add user error:", error);
       Alert.alert("Error", error.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
@@ -100,62 +77,53 @@ export default function AddUserScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title}>Create New User</Text>
-          <View style={{ width: 24 }} />
+          <Text style={styles.headerTitle}>New User</Text>
+          <View style={{ width: 28 }} />
         </View>
-        <Text style={styles.subtitle}>Fill in the user details below</Text>
 
-        {/* Username */}
-        <View style={styles.addusercontainer}>
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Username</Text>
-            <TextInput
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Enter username"
-              placeholderTextColor="#94a3b8"
-              style={styles.input}
-              autoCapitalize="none"
-            />
-          </View>
+        {/* Subtitle */}
+        <Text style={styles.subtitle}>Fill in the details below</Text>
+
+        {/* Form */}
+        <View style={styles.form}>
+          {/* Username */}
+          <FormField
+            label="Username"
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Enter username"
+          />
 
           {/* Password */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter password"
-              placeholderTextColor="#94a3b8"
-              secureTextEntry
-              style={styles.input}
-              autoCapitalize="none"
-            />
-          </View>
+          <FormField
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Enter password"
+            secureTextEntry
+          />
 
           {/* Role Picker */}
-          {/* Role Picker */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Role</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={role}
-                onValueChange={(value) => setRole(value)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Role..." value="" enabled={false} />
-                <Picker.Item label="User" value="user" />
-                <Picker.Item label="Staff" value="staff" />
-                <Picker.Item label="Admin" value="admin" />
-              </Picker>
-            </View>
+          <Text style={styles.label}>Role</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={role}
+              onValueChange={(value) => setRole(value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Select Role..." value="" enabled={false} />
+              <Picker.Item label="User" value="user" />
+              <Picker.Item label="Staff" value="staff" />
+              <Picker.Item label="Admin" value="admin" />
+            </Picker>
           </View>
 
-          {/* Department Picker (only for Staff) */}
+          {/* Department (only staff) */}
           {role === "staff" && (
-            <View style={styles.formGroup}>
+            <>
               <Text style={styles.label}>Department</Text>
               <View style={styles.pickerContainer}>
                 <Picker
@@ -163,11 +131,7 @@ export default function AddUserScreen() {
                   onValueChange={(value) => setDepartment(value)}
                   style={styles.picker}
                 >
-                  <Picker.Item
-                    label="Select Department..."
-                    value=""
-                    enabled={false}
-                  />
+                  <Picker.Item label="Select Department..." value="" enabled={false} />
                   <Picker.Item label="Raw Material" value="Raw Material" />
                   <Picker.Item label="Casting" value="Casting" />
                   <Picker.Item label="Turning" value="Turning" />
@@ -175,7 +139,7 @@ export default function AddUserScreen() {
                   <Picker.Item label="Packing" value="Packing" />
                 </Picker>
               </View>
-            </View>
+            </>
           )}
 
           {/* Button */}
@@ -194,119 +158,92 @@ export default function AddUserScreen() {
   );
 }
 
+function FormField({ label, ...props }) {
+  return (
+    <View style={{ marginBottom: 20 }}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        {...props}
+        placeholderTextColor="#94a3b8"
+        style={styles.input}
+        autoCapitalize="none"
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  scrollContainer: {
+    paddingBottom: 40,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    paddingBottom: 20,
   },
-  titleContainer: {
-    ...StyleSheet.absoluteFillObject, // Fill entire parent
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: "600",
+    color: "#000",
   },
   subtitle: {
-    fontSize: 22,
-    color: "#000000",
-    marginTop: 4,
-    textAlign: "left",
-    padding: 16,
-    fontWeight: 800,
-  },
-  addusercontainer: {
-    padding: 16,
-  },
-  formGroup: {
+    fontSize: 16,
+    color: "#666",
+    paddingHorizontal: 16,
     marginBottom: 20,
+    marginTop: 10
+  },
+  form: {
+    paddingHorizontal: 16,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#334155",
     marginBottom: 8,
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
   input: {
-    height: 50,
-    borderWidth: 0.3,
-    borderColor: "#000000ff",
-    paddingHorizontal: 16,
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingHorizontal: 14,
     fontSize: 16,
-    backgroundColor: "#ffffff",
-    color: "#1e293b",
-    borderRadius: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 0,
-      },
-    }),
+    backgroundColor: "#fafafa",
+    color: "#111827",
+    borderRadius: 12,
   },
   pickerContainer: {
-    borderColor: "#000000ff",
-    borderWidth: 0.3,
-    borderRadius: 10,
-    // padding: 10,
-    overflow: "hidden",
-    backgroundColor: "#ffffff",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 0,
-      },
-    }),
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    marginBottom: 20,
+    backgroundColor: "#fafafa",
   },
   picker: {
-    height: 50,
+    height: 48,
     width: "100%",
-    color: "#1e293b",
-    borderRadius: 10,
+    color: "#111827",
   },
   button: {
-    backgroundColor: "#4678e5ff",
+    backgroundColor: "#005f9eff",
     paddingVertical: 16,
-    borderRadius: 10,
+    borderRadius: 9999,
     alignItems: "center",
-    marginTop: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#4f46e5",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: "#a5b4fc",
+    backgroundColor: "#666",
   },
   buttonText: {
-    color: "#ffffff",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
 });

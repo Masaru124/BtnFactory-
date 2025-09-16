@@ -25,6 +25,7 @@ const OrderSchema = new mongoose.Schema({
   packingOption: { type: String },
   buttonImage: { type: String },
   dispatchDate: { type: Date },
+  destination: { type: String },
   status: { type: String, default: "Pending" },
   createdDate: { type: Date, default: Date.now },
   token: { type: String, required: true, unique: true },
@@ -50,7 +51,7 @@ const OrderSchema = new mongoose.Schema({
 
   // ✅ Polishing Department fields (fixed name to match routes)
   polishProcess: {
-    totalSheets: { type: Number }, 
+    totalSheets: { type: Number },
     polishDate: { type: Date },
     receivedDate: { type: Date },
     startTime: { type: Date },

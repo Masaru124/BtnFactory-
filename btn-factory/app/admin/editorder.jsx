@@ -45,7 +45,7 @@ export default function EditOrderScreen() {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/admin/orders/${orderData.poNumber}`,
+        `${API_URL}/api/admin/orders/${orderData.token}`,
         {
           method: "PUT",
           headers: {

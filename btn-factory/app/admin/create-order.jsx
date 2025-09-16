@@ -14,20 +14,14 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "../contexts/AuthContext";
 import { API_URL } from "../../constants/api";
 import BackButton from "../../components/BackButton";
 
 // 🔹 Reusable Input Component
-const FormField = ({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType,
-}) => (
-  <View style={{ marginBottom: 15 }}>
+const FormField = ({ label, value, onChangeText, placeholder, keyboardType }) => (
+  <View style={styles.fieldContainer}>
     <Text style={styles.label}>{label}</Text>
     <TextInput
       style={styles.input}
@@ -35,6 +29,7 @@ const FormField = ({
       onChangeText={onChangeText}
       placeholder={placeholder}
       keyboardType={keyboardType || "default"}
+      placeholderTextColor="#9CA3AF"
     />
   </View>
 );
@@ -55,8 +50,10 @@ export default function CreateOrderScreen() {
     laser: "",
     polishType: "",
     quantity: "",
+    toolNumber:"",
     packingOption: "",
     dispatchDate: null,
+    destination: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -64,7 +61,6 @@ export default function CreateOrderScreen() {
   const [showDispatchPicker, setShowDispatchPicker] = useState(false);
   const [createdToken, setCreatedToken] = useState(null);
 
-  // images are managed separately
   const [poImage, setPoImage] = useState(null);
   const [buttonImage, setButtonImage] = useState(null);
 
@@ -72,57 +68,37 @@ export default function CreateOrderScreen() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDateChange = (event, selectedDate) => {
+  const handleDateChange = (_, selectedDate) => {
     setShowDatePicker(false);
-    if (selectedDate) {
-      handleChange("poDate", selectedDate);
-    }
+    if (selectedDate) handleChange("poDate", selectedDate);
   };
 
-  const handleDispatchDateChange = (event, selectedDate) => {
+  const handleDispatchDateChange = (_, selectedDate) => {
     setShowDispatchPicker(false);
-    if (selectedDate) {
-      handleChange("dispatchDate", selectedDate);
-    }
+    if (selectedDate) handleChange("dispatchDate", selectedDate);
   };
 
-  // 🔹 Image Picker
   const pickImage = async (setImageState) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission required",
-        "Please grant permission to access gallery"
-      );
+      Alert.alert("Permission required", "Please grant permission to access gallery");
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: [ImagePicker.MediaTypeOptions.Images],
       allowsEditing: true,
       quality: 1,
     });
-
-    if (!result.canceled) {
-      setImageState(result.assets[0]);
-    }
+    if (!result.canceled) setImageState(result.assets[0]);
   };
 
-  // 🔹 Submit Order
+
+
   const handleSubmit = async () => {
-    const {
-      companyName,
-      poNumber,
-      poDate,
-      casting,
-      otherCasting,
-      thickness,
-      holes,
-      boxType,
-      rate,
-      quantity,
-      packingOption,
-    } = formData;
+    const { companyName, poNumber, poDate, casting, otherCasting, thickness, holes, boxType, rate, quantity, packingOption } = formData;
+    const newPoNumber = poNumber?.trim() || `PO-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    handleChange("poNumber", newPoNumber);
+    console.log("PO Number being sent:", newPoNumber);
 
     if (
       !companyName?.trim() ||
@@ -147,7 +123,6 @@ export default function CreateOrderScreen() {
 
       Object.entries(formData).forEach(([key, value]) => {
         if (!value) return;
-
         if (key === "poDate" || key === "dispatchDate") {
           data.append(key, new Date(value).toISOString().split("T")[0]);
         } else if (key === "casting" && value === "Other") {
@@ -157,41 +132,29 @@ export default function CreateOrderScreen() {
         }
       });
 
-      // 🔹 Handle Images
       if (poImage) {
         data.append("poImage", {
-          uri:
-            Platform.OS === "ios"
-              ? poImage.uri.replace("file://", "")
-              : poImage.uri,
-          name:
-            poImage.fileName || `po.${poImage.type?.split("/")[1] || "jpg"}`,
+          uri: Platform.OS === "ios" ? poImage.uri.replace("file://", "") : poImage.uri,
+          name: poImage.fileName || `po.jpg`,
           type: poImage.type || "image/jpeg",
         });
       }
-
       if (buttonImage) {
         data.append("buttonImage", {
-          uri:
-            Platform.OS === "ios"
-              ? buttonImage.uri.replace("file://", "")
-              : buttonImage.uri,
-          name:
-            buttonImage.fileName ||
-            `button.${buttonImage.type?.split("/")[1] || "jpg"}`,
+          uri: Platform.OS === "ios" ? buttonImage.uri.replace("file://", "") : buttonImage.uri,
+          name: buttonImage.fileName || `button.jpg`,
           type: buttonImage.type || "image/jpeg",
         });
       }
 
       const response = await fetch(`${API_URL}/api/admin/orders`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${userToken}` },
+        headers: { Authorization: `Bearer ${userToken}` }, // no 'Content-Type'
         body: data,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Server response:", errorText);
         throw new Error(errorText || "Failed to create order.");
       }
 
@@ -199,7 +162,6 @@ export default function CreateOrderScreen() {
       setCreatedToken(responseData.token);
       resetForm();
     } catch (error) {
-      console.error("Create order error:", error);
       Alert.alert("Error", error.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -221,6 +183,7 @@ export default function CreateOrderScreen() {
       laser: "",
       polishType: "",
       quantity: "",
+      toolNumber:"",
       packingOption: "",
       dispatchDate: null,
     });
@@ -229,307 +192,167 @@ export default function CreateOrderScreen() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.headerContainer}>
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+      {/* Header */}
+      <View style={styles.header}>
         <BackButton />
-        <Text style={styles.header}>Create New Order</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Create Order</Text>
+        <View style={{ width: 28 }} />
       </View>
 
       {createdToken && (
-        <View style={styles.tokenContainer}>
-          <Text style={styles.tokenTitle}>Order Created Successfully</Text>
-          <Text style={styles.tokenText}>Token: {createdToken}</Text>
+        <View style={styles.tokenCard}>
+          <Ionicons name="checkmark-circle" size={22} color="#2563EB" />
+          <View>
+            <Text style={styles.tokenTitle}>Order Created</Text>
+            <Text style={styles.tokenText}>Token: {createdToken}</Text>
+          </View>
         </View>
       )}
 
-      {/* Company Details */}
+      {/* Section: Company Details */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Company Details</Text>
-
         <FormField
           label="Company/Customer Name *"
           value={formData.companyName}
-          onChangeText={(text) => handleChange("companyName", text)}
+          onChangeText={(t) => handleChange("companyName", t)}
           placeholder="Enter company name"
         />
-
         <FormField
           label="P.O. Number *"
           value={formData.poNumber}
-          onChangeText={(text) => handleChange("poNumber", text)}
+          onChangeText={(t) => handleChange("poNumber", t)}
           placeholder="Enter PO number"
         />
-
-        <View>
-          <Text style={styles.label}>P.O. Date *</Text>
-          <TouchableOpacity
-            style={styles.dateInput}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateText}>
-              {formData.poDate.toLocaleDateString("en-IN")}
-            </Text>
-            <MaterialIcons name="date-range" size={20} color="#555" />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.poDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-            />
-          )}
-        </View>
+        <Text style={styles.label}>P.O. Date *</Text>
+        <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)}>
+          <Text style={styles.dateText}>{formData.poDate.toLocaleDateString("en-IN")}</Text>
+          <MaterialIcons name="date-range" size={20} color="#555" />
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker value={formData.poDate} mode="date" display="default" onChange={handleDateChange} />
+        )}
       </View>
 
-      {/* PO Image Upload */}
-      <TouchableOpacity
-        style={styles.fileButton}
-        onPress={() => pickImage(setPoImage)}
-      >
-        <Text style={styles.fileButtonText}>Choose PO Image</Text>
+      {/* PO Image */}
+      <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setPoImage)}>
+        <Ionicons name="image-outline" size={18} color="#fff" />
+        <Text style={styles.uploadText}>Upload PO Image</Text>
       </TouchableOpacity>
-      {poImage && (
-        <Image
-          source={{ uri: poImage.uri }}
-          style={{ width: 100, height: 100 }}
-        />
-      )}
+      {poImage && <Image source={{ uri: poImage.uri }} style={styles.previewImage} />}
 
-      {/* Product Details */}
+      {/* Section: Product Details */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Product Details</Text>
-
+        {/* Casting */}
         <Text style={styles.label}>Casting Type *</Text>
         <View style={styles.radioGroup}>
           {["Rod", "Sheet", "Other"].map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={styles.radioOption}
-              onPress={() => handleChange("casting", option)}
-            >
-              <View style={styles.radioCircle}>
-                {formData.casting === option && (
-                  <View style={styles.selectedRb} />
-                )}
-              </View>
+            <TouchableOpacity key={option} style={styles.radioOption} onPress={() => handleChange("casting", option)}>
+              <View style={styles.radioCircle}>{formData.casting === option && <View style={styles.selectedRb} />}</View>
               <Text style={styles.radioText}>{option}</Text>
             </TouchableOpacity>
           ))}
         </View>
-
         {formData.casting === "Other" && (
           <FormField
             label="Specify Casting Type *"
             value={formData.otherCasting}
-            onChangeText={(text) => handleChange("otherCasting", text)}
+            onChangeText={(t) => handleChange("otherCasting", t)}
             placeholder="Enter casting type"
           />
         )}
 
-        <FormField
-          label="Thickness (mm) *"
-          value={formData.thickness}
-          onChangeText={(text) => handleChange("thickness", text)}
-          placeholder="Enter thickness"
-          keyboardType="numeric"
-        />
-
-        <FormField
-          label="Holes *"
-          value={formData.holes}
-          onChangeText={(text) => handleChange("holes", text)}
-          placeholder="Enter number of holes"
-          keyboardType="numeric"
-        />
-
-        <FormField
-          label="Linings"
-          value={formData.linings}
-          onChangeText={(text) => handleChange("linings", text)}
-          placeholder="Enter linings"
-        />
-
-        <FormField
-          label="Laser"
-          value={formData.laser}
-          onChangeText={(text) => handleChange("laser", text)}
-          placeholder="Enter laser details"
-        />
-
-        <FormField
-          label="Polish Type"
-          value={formData.polishType}
-          onChangeText={(text) => handleChange("polishType", text)}
-          placeholder="Enter polish type"
-        />
-
-        <FormField
-          label="Quantity"
-          value={formData.quantity}
-          onChangeText={(text) => handleChange("quantity", text)}
-          placeholder="Enter quantity"
-          keyboardType="numeric"
-        />
-
-        <FormField
-          label="Packing Option"
-          value={formData.packingOption}
-          onChangeText={(text) => handleChange("packingOption", text)}
-          placeholder="Enter packing option"
-        />
+        {/* More fields */}
+        <FormField label="Thickness (mm) *" value={formData.thickness} onChangeText={(t) => handleChange("thickness", t)} keyboardType="numeric" placeholder="Enter thickness" />
+        <FormField label="Holes *" value={formData.holes} onChangeText={(t) => handleChange("holes", t)} keyboardType="numeric" placeholder="Enter number of holes" />
+        <FormField label="Linings" value={formData.linings} onChangeText={(t) => handleChange("linings", t)} placeholder="Enter linings" />
+        <FormField label="Laser" value={formData.laser} onChangeText={(t) => handleChange("laser", t)} placeholder="Enter laser details" />
+        <FormField label="Polish Type" value={formData.polishType} onChangeText={(t) => handleChange("polishType", t)} placeholder="Enter polish type" />
+        <FormField label="Quantity" value={formData.quantity} onChangeText={(t) => handleChange("quantity", t)} keyboardType="numeric" placeholder="Enter quantity" />
+        <FormField label="Tool Number" value={formData.toolNumber} onChangeText={(t) => handleChange("toolNumber", t)} keyboardType="numeric" placeholder="Enter quantity" />
+        <FormField label="Packing Option" value={formData.packingOption} onChangeText={(t) => handleChange("packingOption", t)} placeholder="Enter packing option" />
 
         <Text style={styles.label}>Box Type *</Text>
         <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.boxType}
-            onValueChange={(value) => handleChange("boxType", value)}
-            style={styles.picker}
-            dropdownIconColor="#555"
-          >
+          <Picker selectedValue={formData.boxType} onValueChange={(v) => handleChange("boxType", v)} style={styles.picker} dropdownIconColor="#555">
             <Picker.Item label="DD" value="DD" />
             <Picker.Item label="SD" value="SD" />
             <Picker.Item label="ODS" value="ODS" />
           </Picker>
         </View>
 
-        <FormField
-          label="Rate (₹) *"
-          value={formData.rate}
-          onChangeText={(text) => handleChange("rate", text)}
-          placeholder="Enter rate per unit"
-          keyboardType="decimal-pad"
-        />
+        <FormField label="Rate (₹) *" value={formData.rate} onChangeText={(t) => handleChange("rate", t)} keyboardType="decimal-pad" placeholder="Enter rate per unit" />
 
-        {/* Button Image Upload */}
-        <TouchableOpacity
-          style={styles.fileButton}
-          onPress={() => pickImage(setButtonImage)}
-        >
-          <Text style={styles.fileButtonText}>Choose Button Image</Text>
+        {/* Button Image */}
+        <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage(setButtonImage)}>
+          <Ionicons name="image-outline" size={18} color="#fff" />
+          <Text style={styles.uploadText}>Upload Button Image</Text>
         </TouchableOpacity>
-        {buttonImage && (
-          <Image
-            source={{ uri: buttonImage.uri }}
-            style={{ width: 100, height: 100 }}
-          />
-        )}
+        {buttonImage && <Image source={{ uri: buttonImage.uri }} style={styles.previewImage} />}
 
         {/* Dispatch Date */}
-        <View>
-          <Text style={styles.label}>Dispatch Date</Text>
-          <TouchableOpacity
-            style={styles.dateInput}
-            onPress={() => setShowDispatchPicker(true)}
-          >
-            <Text style={styles.dateText}>
-              {formData.dispatchDate
-                ? formData.dispatchDate.toLocaleDateString("en-IN")
-                : "Select date"}
-            </Text>
-            <MaterialIcons name="date-range" size={20} color="#555" />
-          </TouchableOpacity>
-          {showDispatchPicker && (
-            <DateTimePicker
-              value={formData.dispatchDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={handleDispatchDateChange}
-            />
-          )}
-        </View>
+        <Text style={styles.label}>Dispatch Date</Text>
+        <TouchableOpacity style={styles.dateInput} onPress={() => setShowDispatchPicker(true)}>
+          <Text style={styles.dateText}>{formData.dispatchDate ? formData.dispatchDate.toLocaleDateString("en-IN") : "Select date"}</Text>
+          <MaterialIcons name="date-range" size={20} color="#555" />
+        </TouchableOpacity>
+        {showDispatchPicker && (
+          <DateTimePicker value={formData.dispatchDate || new Date()} mode="date" display="default" onChange={handleDispatchDateChange} />
+        )}
       </View>
 
-      {/* Submit Button */}
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.submitButtonText}>Create Order</Text>
-        )}
+      {/* Submit */}
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Create Order</Text>}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    padding: 20,
-    paddingBottom: 40,
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
 
   // Header
-  headerContainer: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 25,
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    paddingBottom: 20,
   },
-  header: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
-    flex: 1,
-  },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
 
   // Sections
   section: {
-    marginBottom: 20,
+    margin: 16,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 16,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#1F2937",
-  },
+  sectionTitle: { fontSize: 16, fontWeight: "600", marginBottom: 12, color: "#374151" },
 
-  // Labels & Inputs
-  label: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 6,
-  },
+  // Fields
+  fieldContainer: { marginBottom: 14 },
+  label: { fontSize: 14, fontWeight: "500", color: "#6B7280", marginBottom: 6 },
   input: {
     backgroundColor: "#F3F4F6",
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
     fontSize: 14,
     color: "#111827",
   },
 
   // Picker
-  pickerContainer: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  picker: {
-    height: 48,
-    color: "#111827",
-  },
+  pickerContainer: { backgroundColor: "#F3F4F6", borderRadius: 8, marginBottom: 12 },
+  picker: { height: 44, color: "#111827" },
 
-  // Radio Buttons
-  radioGroup: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: 20,
-    marginBottom: 12,
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  // Radio
+  radioGroup: { flexDirection: "row", gap: 20, marginBottom: 12 },
+  radioOption: { flexDirection: "row", alignItems: "center" },
   radioCircle: {
     height: 18,
     width: 18,
@@ -540,76 +363,57 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 6,
   },
-  selectedRb: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#2563EB",
-  },
-  radioText: {
-    fontSize: 14,
-    color: "#111827",
-  },
+  selectedRb: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#2563EB" },
+  radioText: { fontSize: 14, color: "#111827" },
 
-  // Date Picker
+  // Date
   dateInput: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    padding: 12,
     marginBottom: 12,
   },
-  dateText: {
-    color: "#111827",
-    fontSize: 14,
-  },
+  dateText: { fontSize: 14, color: "#111827" },
 
-  // File Upload
-  fileButton: {
-    backgroundColor: "#2563EB",
-    paddingVertical: 12,
-    borderRadius: 8,
+  // Upload
+  uploadButton: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "center",
+    backgroundColor: "#2563EB",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    gap: 8,
   },
-  fileButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+  uploadText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+  previewImage: { width: 100, height: 100, borderRadius: 8, margin: 10 },
 
-  // Submit Button
+  // Submit
   submitButton: {
+    margin: 20,
     backgroundColor: "#2563EB",
-    paddingVertical: 16,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 10,
+    paddingVertical: 14,
   },
-  submitButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
+  submitText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 
-  // Success Token
-  tokenContainer: {
+  // Token
+  tokenCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: "#EFF6FF",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: 8,
+    margin: 16,
+    padding: 14,
   },
-  tokenTitle: {
-    fontWeight: "700",
-    color: "#1D4ED8",
-    marginBottom: 6,
-    fontSize: 15,
-  },
-  tokenText: {
-    fontSize: 14,
-    color: "#1D4ED8",
-  },
+  tokenTitle: { fontWeight: "700", color: "#1D4ED8", fontSize: 15 },
+  tokenText: { fontSize: 14, color: "#1D4ED8" },
 });

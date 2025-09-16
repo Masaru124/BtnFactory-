@@ -1,177 +1,3 @@
-// import React, { useEffect, useState, useCallback } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   FlatList,
-//   ActivityIndicator,
-//   Alert,
-//   Platform,
-//   TouchableOpacity,
-//   SafeAreaView,
-//   RefreshControl,
-// } from "react-native";
-// import { API_URL } from "../../constants/api";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { Link } from "expo-router";
-// import { useFocusEffect } from "@react-navigation/native";
-
-// function OrderListScreen() {
-//   const [orders, setOrders] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [refreshing, setRefreshing] = useState(false);
-
-//   const fetchOrders = async () => {
-//     try {
-//       const token = await AsyncStorage.getItem("userToken");
-//       const response = await fetch(`${API_URL}/api/admin/orders`, {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       });
-
-//       const data = await response.json();
-
-//       if (response.ok) {
-//         setOrders(data);
-//       } else {
-//         Alert.alert("Error", data.message || "Failed to load orders");
-//       }
-//     } catch (error) {
-//       console.error("Fetch orders error:", error);
-//       Alert.alert("Error", "An unexpected error occurred");
-//     } finally {
-//       setLoading(false);
-//       setRefreshing(false);
-//     }
-//   };
-
-//   const onRefresh = () => {
-//     setRefreshing(true);
-//     fetchOrders();
-//   };
-
-//   useEffect(() => {
-//     fetchOrders();
-//   }, []);
-
-//   useFocusEffect(
-//     useCallback(() => {
-//       fetchOrders();
-//     }, [])
-//   );
-
-//   if (loading && orders.length === 0) {
-//     return (
-//       <View style={styles.loadingContainer}>
-//         <ActivityIndicator size="large" color="#4f46e5" />
-//         <Text style={styles.loadingText}>Loading orders...</Text>
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <View style={styles.header}>
-//         <Text style={styles.title}>Order Management</Text>
-//         <Text style={styles.subtitle}>
-//           {orders.length} order{orders.length !== 1 ? "s" : ""} in system
-//         </Text>
-//       </View>
-
-//       <FlatList
-//         data={orders}
-//         keyExtractor={(item) =>
-//           item._id?.toString() || Math.random().toString()
-//         }
-//         contentContainerStyle={styles.listContent}
-//         refreshControl={
-//           <RefreshControl
-//             refreshing={refreshing}
-//             onRefresh={onRefresh}
-//             tintColor="#4f46e5"
-//           />
-//         }
-//         ListEmptyComponent={
-//           <View style={styles.emptyContainer}>
-//             <Text style={styles.emptyText}>No orders found</Text>
-//             <Text style={styles.emptySubtext}>Pull down to refresh</Text>
-//           </View>
-//         }
-//         renderItem={({ item }) => (
-//           <Link
-//             href={{
-//               pathname: "/admin/order-details",
-//               params: { order: JSON.stringify(item) },
-//             }}
-//             asChild
-//           >
-//             <TouchableOpacity style={styles.orderCard}>
-//               <View style={styles.orderHeader}>
-//                 <Text style={styles.orderNumber}>
-//                   #{item._id?.slice(-6).toUpperCase()}
-//                 </Text>
-//                 <View
-//                   style={[
-//                     styles.statusBadge,
-//                     { backgroundColor: getStatusColor(item.status) },
-//                   ]}
-//                 >
-//                   <Text style={styles.statusText}>{item.status}</Text>
-//                 </View>
-//               </View>
-
-//               <View style={styles.orderDetails}>
-//                 <Text style={styles.companyName}>{item.companyName}</Text>
-//                 <Text style={styles.poNumber}>
-//                   PO: {item.poNumber || "N/A"}
-//                 </Text>
-//               </View>
-
-//               <View style={styles.orderFooter}>
-//                 <Text style={styles.dateText}>
-//                   {new Date(item.createdDate).toLocaleDateString("en-US", {
-//                     year: "numeric",
-//                     month: "short",
-//                     day: "numeric",
-//                   })}
-//                 </Text>
-//                 <Text style={styles.itemsCount}>
-//                   {item.items?.length || 0} item
-//                   {item.items?.length !== 1 ? "s" : ""}
-//                 </Text>
-//               </View>
-//             </TouchableOpacity>
-//           </Link>
-//         )}
-//       />
-
-//       <Link href="/admin/create-order" asChild>
-//         <TouchableOpacity style={styles.createButton}>
-//           <Text style={styles.createButtonText}>+ New Order</Text>
-//         </TouchableOpacity>
-//       </Link>
-//     </SafeAreaView>
-//   );
-// }
-
-// const getStatusColor = (status) => {
-//   switch (status?.toLowerCase()) {
-//     case "pending":
-//       return "#f59e0b";
-//     case "completed":
-//       return "#10b981";
-//     case "shipped":
-//       return "#3b82f6";
-//     case "cancelled":
-//       return "#ef4444";
-//     default:
-//       return "#64748b";
-//   }
-// };
-
-//
-
 import React, { useEffect, useState, useCallback, useContext } from "react";
 import {
   View,
@@ -189,7 +15,7 @@ import { API_URL } from "../../constants/api";
 import { Link } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import BackButton from "../../components/BackButton";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { AuthContext } from "../contexts/AuthContext";
 
 function OrderListScreen() {
@@ -260,8 +86,8 @@ function OrderListScreen() {
 
   if (loading && orders.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <View style={styles.centeredContainer}>
+        <ActivityIndicator size="large" color="#000" />
         <Text style={styles.loadingText}>Loading orders...</Text>
       </View>
     );
@@ -269,48 +95,43 @@ function OrderListScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <BackButton />
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Order Management</Text>
-        </View>
+        <Text style={styles.title}>Order Management</Text>
         <Link href="/admin/create-order" asChild>
-          <TouchableOpacity style={styles.addButton}>
-            <Ionicons name="add" size={28} color="#4f46e5" />
+          <TouchableOpacity style={styles.headerButton}>
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text style={styles.headerButtonText}>New</Text>
           </TouchableOpacity>
         </Link>
       </View>
 
-      {/* <Text style={styles.subtitle}>
+      {/* Subtitle */}
+      <Text style={styles.subtitle}>
         {orders.length} order{orders.length !== 1 ? "s" : ""} in system
-      </Text> */}
+      </Text>
 
+      {/* Error */}
       {error && (
-        <View style={styles.errorContainer}>
-          <Ionicons name="warning" size={20} color="#ef4444" />
+        <View style={styles.errorBox}>
+          <Ionicons name="warning-outline" size={18} color="#dc2626" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
+      {/* List */}
       <FlatList
         data={orders}
         keyExtractor={(item) => item._id?.toString() || `temp-${Date.now()}`}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#4f46e5"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
           !loading && (
             <View style={styles.emptyContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={48}
-                color="#64748b"
-              />
+              <Ionicons name="document-text-outline" size={48} color="#9ca3af" />
               <Text style={styles.emptyText}>No orders found</Text>
               <Text style={styles.emptySubtext}>Pull down to refresh</Text>
             </View>
@@ -325,7 +146,8 @@ function OrderListScreen() {
             asChild
           >
             <TouchableOpacity style={styles.orderCard}>
-              <View style={styles.orderHeader}>
+              <View style={styles.cardHeader}>
+                <MaterialIcons name="inventory" size={22} color="#000" />
                 <Text style={styles.orderNumber}>
                   #{item._id?.slice(-6).toUpperCase() || "N/A"}
                 </Text>
@@ -341,7 +163,7 @@ function OrderListScreen() {
                 </View>
               </View>
 
-              <View style={styles.orderDetails}>
+              <View style={styles.cardBody}>
                 <Text style={styles.companyName}>
                   {item.companyName || "No company"}
                 </Text>
@@ -350,14 +172,14 @@ function OrderListScreen() {
                 </Text>
               </View>
 
-              <View style={styles.orderFooter}>
+              <View style={styles.cardFooter}>
                 <Text style={styles.dateText}>
                   {item.createdDate
                     ? new Date(item.createdDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
                     : "No date"}
                 </Text>
                 <Text style={styles.itemsCount}>
@@ -384,163 +206,86 @@ const getStatusColor = (status) => {
     case "cancelled":
       return "#ef4444";
     default:
-      return "#64748b";
+      return "#6b7280";
   }
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffffff",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ffffffff",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: "#64748b",
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
+  centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 8, color: "#6b7280" },
+
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 10,
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#e2e8f0",
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    paddingBottom: 20,
   },
-  titleContainer: {
-    padding: 10,
+  title: { fontSize: 20, fontWeight: "700", color: "#000" },
+  subtitle: { fontSize: 15, color: "#6b7280", marginBottom: 8, marginLeft: 16 },
+
+  headerButton: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#000",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1e293b",
+  headerButtonText: { color: "#fff", fontWeight: "600", marginLeft: 4 },
+
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fee2e2",
+    padding: 10,
+    marginHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 18,
-    color: "#64748b",
-    marginTop: 20,
-    marginLeft: 20,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
+  errorText: { marginLeft: 6, color: "#dc2626", fontWeight: "500" },
+
+  listContent: { padding: 16, paddingBottom: 100 },
   orderCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    borderWidth: 0.5,
+    backgroundColor: "#fff",
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: "#e5e7eb",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
       },
-      android: {
-        elevation: 0,
-      },
+      android: { elevation: 1 },
     }),
   },
-  orderHeader: {
+  cardHeader: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 2,
+    marginBottom: 6,
   },
-  orderNumber: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  statusBadge: {
-    paddingVertical: 2,
-    paddingHorizontal: 9,
-    borderRadius: 1,
-  },
-  statusText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "capitalize",
-  },
-  orderDetails: {
-    marginBottom: 1,
-  },
-  companyName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1e293b",
-    marginBottom: 4,
-  },
-  poNumber: {
-    fontSize: 14,
-    color: "#64748b",
-  },
-  orderFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dateText: {
-    fontSize: 13,
-    color: "#64748b",
-  },
-  itemsCount: {
-    fontSize: 13,
-    color: "#64748b",
-    fontWeight: "500",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#64748b",
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#94a3b8",
-  },
-  createButton: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    backgroundColor: "#4f46e5",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#4f46e5",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  createButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 4,
-  },
+  orderNumber: { fontSize: 16, fontWeight: "600", color: "#000", flex: 1, marginLeft: 6 },
+  statusBadge: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6 },
+  statusText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+
+  cardBody: { marginBottom: 8 },
+  companyName: { fontSize: 16, fontWeight: "600", color: "#000" },
+  poNumber: { fontSize: 14, color: "#6b7280" },
+
+  cardFooter: { flexDirection: "row", justifyContent: "space-between" },
+  dateText: { fontSize: 13, color: "#6b7280" },
+  itemsCount: { fontSize: 13, fontWeight: "500", color: "#6b7280" },
+
+  emptyContainer: { alignItems: "center", marginTop: 80 },
+  emptyText: { fontSize: 16, fontWeight: "500", color: "#374151" },
+  emptySubtext: { fontSize: 14, color: "#6b7280" },
 });
 
 export default OrderListScreen;

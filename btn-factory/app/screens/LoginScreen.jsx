@@ -25,10 +25,7 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isFocused, setIsFocused] = useState({
-    username: false,
-    password: false,
-  });
+  const [isFocused, setIsFocused] = useState({ username: false, password: false });
 
   const handleLogin = async () => {
     setError("");
@@ -47,7 +44,7 @@ const LoginScreen = () => {
       if (roles?.includes("admin")) {
         router.replace("/admin");
       } else if (roles?.includes("staff")) {
-        router.replace("/staff"); // 🔧 Redirect staff to /staff
+        router.replace("/staff");
       } else {
         router.replace("/user");
       }
@@ -65,173 +62,150 @@ const LoginScreen = () => {
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.content}>
+        <View style={styles.inner}>
+          {/* App Title */}
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back to Fabricana Supreme</Text>
+            <Text style={styles.title}>Fabricana Supreme</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
           </View>
 
+          {/* Error Message */}
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <View style={styles.formGroup}>
-            <TextInput
-              placeholder="Username"
-              placeholderTextColor="#94a3b8"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              style={[styles.input, isFocused.username && styles.inputFocused]}
-              onFocus={() => setIsFocused({ ...isFocused, username: true })}
-              onBlur={() => setIsFocused({ ...isFocused, username: false })}
-              returnKeyType="next"
-            />
-          </View>
+          {/* Username Input */}
+          <TextInput
+            placeholder="Username"
+            placeholderTextColor="#9CA3AF"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            style={[styles.input, isFocused.username && styles.inputFocused]}
+            onFocus={() => setIsFocused({ ...isFocused, username: true })}
+            onBlur={() => setIsFocused({ ...isFocused, username: false })}
+            returnKeyType="next"
+          />
 
-          <View style={styles.formGroup}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor="#94a3b8"
-              value={password}
-              onChangeText={setPassword}
-              style={[styles.input, isFocused.password && styles.inputFocused]}
-              secureTextEntry
-              onFocus={() => setIsFocused({ ...isFocused, password: true })}
-              onBlur={() => setIsFocused({ ...isFocused, password: false })}
-              returnKeyType="done"
-              onSubmitEditing={handleLogin}
-            />
-          </View>
+          {/* Password Input */}
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#9CA3AF"
+            value={password}
+            onChangeText={setPassword}
+            style={[styles.input, isFocused.password && styles.inputFocused]}
+            secureTextEntry
+            onFocus={() => setIsFocused({ ...isFocused, password: true })}
+            onBlur={() => setIsFocused({ ...isFocused, password: false })}
+            returnKeyType="done"
+            onSubmitEditing={handleLogin}
+          />
 
-          <TouchableOpacity
+          {/* Forgot Password */}
+          {/* <TouchableOpacity
             style={styles.forgotPassword}
             onPress={() => router.push("/forgot-password")}
           >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
+          {/* Submit Button */}
           {loading ? (
-            <ActivityIndicator
-              size="large"
-              color="#6366f1"
-              style={styles.loadingIndicator}
-            />
+            <ActivityIndicator size="large" color="#000" style={styles.loadingIndicator} />
           ) : (
-            <>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={handleLogin}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.buttonText}>Sign In</Text>
-              </TouchableOpacity>
-
-              <View style={styles.footer}>
-                <Text style={styles.footerText}>Dont have an account?</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/register")}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.registerLink}> Sign Up</Text>
-                </TouchableOpacity>
-              </View>
-            </>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleLogin}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.buttonText}>Sign In</Text>
+            </TouchableOpacity>
           )}
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don’t have an account?</Text>
+            <TouchableOpacity onPress={() => router.push("/register")} activeOpacity={0.7}>
+              <Text style={styles.registerLink}> Sign Up</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
-    // </TouchableWithoutFeedback>
+    // {/* </TouchableWithoutFeedback> */}
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff",
-  },
-  content: {
-    flex: 1,
+    backgroundColor: "#fff", // clean background
     justifyContent: "center",
+  },
+  inner: {
     paddingHorizontal: width * 0.08,
-    paddingBottom: 40,
   },
   header: {
     marginBottom: 40,
+    alignItems: "center",
   },
   title: {
-    fontSize: 34,
-    textAlign: "center",
+    fontSize: 36,
     fontWeight: "800",
-    color: "#1e293b",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
-    marginBottom: 8,
+    color: "#0963b8ff",
+    marginBottom: 6,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 18,
-    textAlign: "center",
-    color: "#64748b",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+    color: "#6B7280",
     fontWeight: "500",
-  },
-  formGroup: {
-    marginBottom: 20,
   },
   input: {
     width: "100%",
-    height: 56,
-    borderWidth: 0.3,
-    // borderColor: "#000000ff",
-    borderRadius: 8,
+    height: 54,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: "#ffffff",
-    color: "#000000ff",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
-    elevation: 0,
+    backgroundColor: "#F9FAFB",
+    color: "#111827",
+    marginBottom: 16,
   },
   inputFocused: {
-    borderColor: "#000000ff",
-    shadowColor: "#000000ff",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 1,
+    borderColor: "#000",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   errorText: {
-    color: "#ef4444",
-    marginBottom: 20,
+    color: "#EF4444",
+    marginBottom: 16,
     fontSize: 14,
     fontWeight: "500",
     textAlign: "center",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
   forgotPassword: {
     alignSelf: "flex-end",
-    marginBottom: 24,
+    marginBottom: 28,
   },
   forgotPasswordText: {
-    color: "#64748b",
+    color: "#6B7280",
     fontSize: 14,
     fontWeight: "500",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
   button: {
     width: "100%",
-    height: 50,
-    borderRadius: 8,
-    backgroundColor: "#0075faff",
+    height: 54,
+    borderRadius: 12,
+    backgroundColor: "#0963b8ff", // black primary
     justifyContent: "center",
     alignItems: "center",
-    // margin:10,
-    marginTop: 8,
-    shadowColor: "#6366f1",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 0,
   },
   buttonText: {
-    color: "#ffffff",
+    color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+    fontWeight: "700",
   },
   footer: {
     flexDirection: "row",
@@ -239,15 +213,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: "#000000ff",
+    color: "#374151",
     fontSize: 15,
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
   registerLink: {
-    color: "#0752c2ff",
+    color: "#000",
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
   },
   loadingIndicator: {
     marginVertical: 32,

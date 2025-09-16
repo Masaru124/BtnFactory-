@@ -3,8 +3,11 @@ import { View, Text, StyleSheet } from "react-native";
 import { AuthContext } from "../contexts/AuthContext";
 import RawMaterialDepartment from "./RawMaterialDepartment";
 import CastingDepartment from "./CastingDepartment";
-import  PolishDepartment  from "./PolishDepartment";
+import PolishDepartment from "./PolishDepartment";
+import TurningDepartment from "./TurningDepartment"; // ✅ NEW
+import PackingDepartment from "./PackingDepartment"; // ✅ NEW
 import { API_URL } from "../../constants/api";
+
 const StaffScreen = () => {
   const authContext = useContext(AuthContext);
 
@@ -23,6 +26,7 @@ const StaffScreen = () => {
     }
   }, [user]);
 
+  // ---------- HANDLERS ----------
   const handleRawMaterialSubmit = async (data) => {
     try {
       const response = await fetch(
@@ -34,11 +38,13 @@ const StaffScreen = () => {
             Authorization: `Bearer ${authContext.userToken}`,
           },
           body: JSON.stringify({
-            materials: [{
-              materialName: data.materialName,
-              quantity: Number(data.quantity),
-              totalPrice: Number(data.totalPrice),
-            }],
+            materials: [
+              {
+                materialName: data.materialName,
+                quantity: Number(data.quantity),
+                totalPrice: Number(data.totalPrice),
+              },
+            ],
           }),
         }
       );
@@ -64,7 +70,7 @@ const StaffScreen = () => {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${authContext.userToken}`, // ✅ ADD THIS LINE
+            Authorization: `Bearer ${authContext.userToken}`,
           },
           body: JSON.stringify({
             rawMaterialsUsed: data.rawMaterialsUsed,
@@ -116,26 +122,80 @@ const StaffScreen = () => {
     }
   };
 
+  const handleTurningSubmit = async (data) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/staff/orders/turning-process/${data.token}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authContext.userToken}`,
+          },
+          body: JSON.stringify({
+            itemsTurned: data.itemsTurned,
+            wasteProduced: data.wasteProduced,
+            startTime: data.startTime,
+            endTime: data.endTime,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update turning process data");
+      }
+      setMessage("Turning process data updated successfully");
+    } catch (error) {
+      setMessage(error.message);
+      console.error("❌ Turning Submit Error:", error);
+    }
+  };
+
+  const handlePackingSubmit = async (data) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/staff/orders/packing-process/${data.token}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authContext.userToken}`,
+          },
+          body: JSON.stringify({
+            packedItems: data.packedItems,
+            packingDate: data.packingDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update packing process data");
+      }
+      setMessage("Packing process data updated successfully");
+    } catch (error) {
+      setMessage(error.message);
+      console.error("❌ Packing Submit Error:", error);
+    }
+  };
+
+  // ---------- RENDER ----------
   const renderDepartmentInterface = () => {
     const department = user?.departments?.[0];
     console.log("🔍 First department:", department);
 
     switch (department) {
       case "Raw Material":
-        console.log("✅ Rendering Raw Material Interface");
         return <RawMaterialDepartment onSubmit={handleRawMaterialSubmit} />;
-
       case "Casting":
-        console.log("✅ Rendering Casting Interface");
         return <CastingDepartment onSubmit={handleCastingSubmit} />;
-
       case "Polish":
-        console.log("Polishing Casting Interface");
         return <PolishDepartment onSubmit={handlePolishingSubmit} />;
-
+      case "Turning": // ✅ NEW
+        return <TurningDepartment onSubmit={handleTurningSubmit} />;
+      case "Packing": // ✅ NEW
+        return <PackingDepartment onSubmit={handlePackingSubmit} />;
       default:
-        console.warn("⚠️ No matching department found:", department);
-        return <Text>No interface available for your department.</Text>;
+        return
     }
   };
 
@@ -151,15 +211,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: "center",
+    // paddingHorizontal: 20,
   },
   message: {
-    marginVertical: 10,
+    // marginVertical: 10,
     color: "green",
     textAlign: "center",
   },
