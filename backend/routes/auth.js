@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const { JWT_SECRET } = require("../config");
 
@@ -16,8 +17,9 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Invalid username or password" });
   }
 
-  // For demo, plain text password check (not secure)
-  if (user.password !== password) {
+  // Compare password with hashed password in database
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
     return res.status(400).json({ message: "Invalid username or password" });
   }
 
@@ -45,7 +47,16 @@ router.post("/register", async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "Username already exists" });
     }
-    const newUser = new User({ username, password, roles: ["user"], departments: ["Raw Material"] });
+    // Hash password before saving
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    const newUser = new User({ 
+      username, 
+      password: hashedPassword, 
+      roles: ["user"], 
+      departments: ["Raw Material"] 
+    });
     await newUser.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {

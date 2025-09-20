@@ -30,7 +30,7 @@ const OrderSchema = new mongoose.Schema({
   createdDate: { type: Date, default: Date.now },
   token: { type: String, required: true, unique: true },
 
-  // ✅ Raw Material Department fields
+  // ✅ Raw Material Department
   rawMaterials: [
     {
       materialName: { type: String, required: true },
@@ -40,36 +40,43 @@ const OrderSchema = new mongoose.Schema({
     },
   ],
 
-  // ✅ Casting Department fields
+  // ✅ Casting Department
   castingProcess: {
-    rawMaterialsUsed: { type: String },
-    sheetsMade: { type: Number },
-    sheetsWasted: { type: Number },
-    startTime: { type: Date },
-    endTime: { type: Date },
+    blankThickness: { type: Number }, // e.g., mm
+    preparedQuantity: { type: Number }, // weight in grams/kg
+    operator: { type: String },
+    employeeId: { type: String },
+    startDate: { type: Date },
+    endDate: { type: Date },
   },
 
-  // ✅ Polishing Department fields (fixed name to match routes)
+  // ✅ Turning Department
+  turningProcess: {
+    mcNo: { type: String }, // Machine number
+    operator: { type: String },
+    employeeId: { type: String },
+    remark: { type: String },
+    receivedDate: { type: Date },
+    startTime: { type: Date },
+    endTime: { type: Date },
+    grossWeight: { type: Number },
+    wtInKg: { type: Number },
+    finishThickness: { type: Number },
+  },
+
+  // ✅ Polishing Department
   polishProcess: {
-    totalSheets: { type: Number },
+    readyThickness: { type: Number },
+    weightInGram: { type: Number },
+    weightInKg: { type: Number },
+    gross: { type: Number, default: 144 }, // 1 gross = 144 buttons
+    grossWeightInGram: { type: Number, default: 40 }, // 1 gross = 40g
     polishDate: { type: Date },
     receivedDate: { type: Date },
     startTime: { type: Date },
     endTime: { type: Date },
-    GrossWeight: { type: Number },
-    WtinKg: { type: Number },
-  },
-
-  // ✅ Turning Department fields (added, missing before)
-  turningProcess: {
-    totalSheets: { type: Number },
-    turningDate: { type: Date },
-    receivedDate: { type: Date },
-    startTime: { type: Date },
-    endTime: { type: Date },
-    GrossWeight: { type: Number },
-    WtinKg: { type: Number },
-    FinishThickness: { type: Number },
+    operator: { type: String },
+    employeeId: { type: String },
   },
 });
 

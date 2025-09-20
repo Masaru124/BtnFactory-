@@ -12,6 +12,7 @@
     "@react-native-picker/picker": "^2.4.8",
     "@react-navigation/native": "^6.1.6",
     "axios": "^1.12.1",
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

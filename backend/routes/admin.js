@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ------------------- USER ROUTES -------------------
+/* ------------------- USER ROUTES ------------------- */
 
 // Add user (admin only)
 router.post("/users", authorizeRoles(["admin"]), async (req, res) => {
@@ -41,7 +41,6 @@ router.post("/users", authorizeRoles(["admin"]), async (req, res) => {
 
   try {
     const newUser = new User({ username, password, roles, departments });
-    // ⚠️ Ensure your User schema hashes password in a pre-save hook
     await newUser.save();
     res.status(201).json({ message: "User created" });
   } catch (err) {
@@ -112,7 +111,7 @@ router.put(
   }
 );
 
-// ------------------- ORDER ROUTES -------------------
+/* ------------------- ORDER ROUTES ------------------- */
 
 // Helper: Create new order
 async function createOrder(req, res) {
@@ -178,6 +177,19 @@ async function createOrder(req, res) {
       return res.status(409).json({
         message: "PO Number already exists",
         details: "An order with this PO number already exists in the system",
+      });
+    }
+
+    // Validate rawMaterials if provided
+    const validatedRawMaterials = [];
+    if (rawMaterials && Array.isArray(rawMaterials)) {
+      rawMaterials.forEach((material) => {
+        validatedRawMaterials.push({
+          materialName: material.materialName || "",
+          quantity: Number(material.quantity) || 0,
+          totalPrice: Number(material.totalPrice) || 0,
+          updatedAt: new Date(),
+        });
       });
     }
 
@@ -276,54 +288,102 @@ router.get("/orders", authorizeRoles(["admin"]), async (req, res) => {
   }
 });
 
-// Update order by ID or PO Number (admin only)
-router.put("/orders/:token", authorizeRoles(["admin"]), async (req, res) => {
+// Update full order (admin only, includes rawMaterials + department processes + nested dates)
+router.put("/orders/:poNumber", authorizeRoles(["admin"]), async (req, res) => {
   try {
-    const { token } = req.params;
-    if (!token)
-      return res.status(400).json({ message: "Order token is required" });
+    const { poNumber } = req.params;
 
-    // Find the order using the token only
-    const query = { token: new RegExp(`^${token}$`, "i") };
-
-    const updateData = { ...req.body };
-    // Remove fields that shouldn't be updated
-    ["_id", "createdDate", "userId", "token"].forEach(
-      (f) => delete updateData[f]
-    );
-
-    // Convert numeric fields
-    if (updateData.rate) updateData.rate = parseFloat(updateData.rate);
-    if (updateData.quantity)
-      updateData.quantity = parseInt(updateData.quantity);
-    if (updateData.toolNumber)
-      updateData.toolNumber = parseInt(updateData.toolNumber);
-    if (updateData.poDate) updateData.poDate = new Date(updateData.poDate);
-    if (updateData.dispatchDate)
-      updateData.dispatchDate = new Date(updateData.dispatchDate);
-
-    const updatedOrder = await Order.findOneAndUpdate(
-      query,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedOrder) {
-      return res.status(404).json({
-        message: "Order not found",
-        details: `Token: ${token}`,
-      });
+    if (!poNumber) {
+      return res.status(400).json({ message: "PO Number is required." });
     }
+
+    // Find order by PO number (case-insensitive)
+    const order = await Order.findOne({
+      poNumber: new RegExp(`^${poNumber}$`, "i"),
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    const updateData = req.body;
+
+    const safeParseNumber = (value) => {
+      const parsed = Number(value);
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
+    const safeParseDate = (value) => {
+      try {
+        const date = new Date(value);
+        return isNaN(date.getTime()) ? new Date() : date;
+      } catch {
+        return new Date();
+      }
+    };
+
+    Object.keys(updateData).forEach((key) => {
+      // Skip protected fields
+      if (["_id", "createdDate", "userId", "token", "poNumber"].includes(key))
+        return;
+
+      // Top-level numbers
+      if (["rate", "quantity", "toolNumber"].includes(key)) {
+        order[key] = safeParseNumber(updateData[key]);
+        return;
+      }
+
+      // Top-level dates
+      if (["poDate", "dispatchDate"].includes(key)) {
+        order[key] = safeParseDate(updateData[key]);
+        return;
+      }
+
+      // Nested objects
+      const nestedFields = [
+        "castingProcess",
+        "turningProcess",
+        "polishProcess",
+      ];
+      if (nestedFields.includes(key) && typeof updateData[key] === "object") {
+        Object.entries(updateData[key]).forEach(([nestedKey, value]) => {
+          if (order[key]) order[key][nestedKey] = value;
+        });
+        return;
+      }
+
+      // Raw materials array
+      if (key === "rawMaterials" && Array.isArray(updateData.rawMaterials)) {
+        order.rawMaterials = updateData.rawMaterials.map((rm) => ({
+          materialName: rm.materialName || "",
+          quantity: safeParseNumber(rm.quantity),
+          totalPrice: safeParseNumber(rm.totalPrice),
+          updatedAt: rm.updatedAt ? safeParseDate(rm.updatedAt) : new Date(),
+        }));
+        return;
+      }
+
+      // Fallback
+      order[key] = updateData[key];
+    });
+
+    const updatedOrder = await order.save();
 
     res.json({
       success: true,
-      message: "Order updated successfully",
+      message: "Order updated successfully.",
       order: updatedOrder,
     });
   } catch (err) {
+    if (err.name === "ValidationError") {
+      return res
+        .status(400)
+        .json({ message: "Validation failed.", errors: err.errors });
+    }
+    console.error("Error updating order:", err);
     res
       .status(500)
-      .json({ message: "Error updating order", error: err.message });
+      .json({ message: "Error updating order.", error: err.message });
   }
 });
 

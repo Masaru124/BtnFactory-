@@ -31,9 +31,13 @@ mongoose
 const createDefaultAdmin = async () => {
   const exists = await User.findOne({ username: "admin" });
   if (!exists) {
+    const bcrypt = require("bcryptjs");
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash("admin123", salt);
+    
     const admin = new User({
       username: "admin",
-      password: "admin123",
+      password: hashedPassword,
       roles: ["admin"],
     });
     await admin.save();
